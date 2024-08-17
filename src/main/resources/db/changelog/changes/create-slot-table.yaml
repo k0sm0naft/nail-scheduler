@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-slot-table
+      author: Artem_Akymenko
+      changes:
+        - createTable:
+            tableName: slots
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: start
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: available
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
