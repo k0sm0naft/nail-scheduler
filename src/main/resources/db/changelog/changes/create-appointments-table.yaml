@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-role-table
+      author: Artem_Akymenko
+      changes:
+        - sql:
+            sql: "CREATE TYPE appointment_status AS ENUM ('CONFIRMED', 'CANCELED', 'PENDING');"
+        - createTable:
+            tableName: appointments
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: slot_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_slot_id
+                    references: slots(id)
+                    nullable: false
+              - column:
+                  name: client_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_client_id
+                    references: users(id)
+                    nullable: false
+              - column:
+                  name: notes
+                  type: varchar(400)
+              - column:
+                  name: status
+                  type: appointment_status
+                  constraints:
+                    nullable: false
