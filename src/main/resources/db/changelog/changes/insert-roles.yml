@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-roles
+      author: Artem_Akymenko
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "ROLE_ADMIN" }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "ROLE_MASTER" }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "ROLE_CLIENT" }
