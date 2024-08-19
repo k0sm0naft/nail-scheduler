@@ -1,4 +1,4 @@
-package fern_nail_art.nailscheduler;
+package fern.nail.art.nailscheduler;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

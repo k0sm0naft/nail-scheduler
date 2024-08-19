@@ -8,7 +8,7 @@
         <version>3.3.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>fern_nail_art</groupId>
+    <groupId>fern.nail.art</groupId>
     <artifactId>NailScheduler</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>NailScheduler</name>
@@ -76,6 +76,12 @@
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 

@@ -1,4 +1,4 @@
-package fern_nail_art.nailscheduler;
+package fern.nail.art.nailscheduler;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

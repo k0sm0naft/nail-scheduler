@@ -1,4 +1,4 @@
-package fern_nail_art.nailscheduler.model;
+package fern.nail.art.nailscheduler.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
