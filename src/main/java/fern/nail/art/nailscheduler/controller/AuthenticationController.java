@@ -7,6 +7,7 @@ import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
 import fern.nail.art.nailscheduler.exception.RegistrationException;
 import fern.nail.art.nailscheduler.security.AuthenticationService;
 import fern.nail.art.nailscheduler.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,14 +25,14 @@ public class AuthenticationController {
 
     @PostMapping("/registration")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponseDto register(@RequestBody UserRegistrationRequestDto userRequestDto)
+    public UserResponseDto register(@RequestBody @Valid UserRegistrationRequestDto userRequestDto)
             throws RegistrationException {
         return userService.register(userRequestDto);
     }
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public UserLoginResponseDto login(@RequestBody UserLoginRequestDto userLoginRequestDto) {
+    public UserLoginResponseDto login(@RequestBody @Valid UserLoginRequestDto userLoginRequestDto) {
         return authenticationService.authenticate(userLoginRequestDto);
     }
 }
