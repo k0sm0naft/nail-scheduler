@@ -43,4 +43,10 @@ public class UserServiceImpl implements UserService {
         user = userRepository.save(user);
         return userMapper.toDto(user);
     }
+
+    @Override
+    public boolean isMaster(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName() == Role.RoleName.ROLE_MASTER);
+    }
 }

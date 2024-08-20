@@ -13,18 +13,39 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
               - column:
-                  name: start
-                  type: TIMESTAMP
+                  name: date
+                  type: date
                   constraints:
                     nullable: false
               - column:
-                  name: end
-                  type: TIMESTAMP
+                  name: start_time
+                  type: time
                   constraints:
                     nullable: false
               - column:
-                  name: available
+                  name: end_time
+                  type: time
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_available
                   type: boolean
                   defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_published
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
                   constraints:
                     nullable: false

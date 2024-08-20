@@ -3,6 +3,7 @@ package fern.nail.art.nailscheduler.exception;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import io.jsonwebtoken.JwtException;
@@ -64,6 +65,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         String localizedMessage =
                 messageSource.getMessage("error.user.exist", null, request.getLocale());
         return getResponseEntity(CONFLICT, localizedMessage.formatted(ex.getMessage()));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    protected ResponseEntity<Object> handleEntityNotFound(
+            EntityNotFoundException ex,
+            WebRequest request
+    ) {
+        String localizedMessage =
+                messageSource.getMessage("error.entity.not.found", null, request.getLocale());
+        return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BusySlotException.class)
+    protected ResponseEntity<Object> handleBusySlot(
+            BusySlotException ex,
+            WebRequest request
+    ) {
+        String localizedMessage =
+                messageSource.getMessage("error.busy.slot", null, request.getLocale());
+        return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

@@ -1,14 +1,21 @@
 package fern.nail.art.nailscheduler.annotation;
 
-import fern.nail.art.nailscheduler.dto.user.UserRegistrationRequestDto;
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
-import java.util.Objects;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public class FieldMatchValidator
-        implements ConstraintValidator<FieldMatch, UserRegistrationRequestDto> {
-    @Override
-    public boolean isValid(UserRegistrationRequestDto userDto, ConstraintValidatorContext context) {
-        return Objects.equals(userDto.password(), userDto.repeatPassword());
-    }
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+@Constraint(validatedBy = PasswordMatchValidator.class)
+@Target({TYPE, ANNOTATION_TYPE})
+@Retention(RUNTIME)
+public @interface FieldMatchValidator {
+    String message() default "Fields don't match!";
+    String field();
+    String fieldMatch();
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
 }

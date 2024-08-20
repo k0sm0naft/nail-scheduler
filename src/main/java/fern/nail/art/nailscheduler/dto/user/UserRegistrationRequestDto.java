@@ -1,15 +1,13 @@
 package fern.nail.art.nailscheduler.dto.user;
 
-import fern.nail.art.nailscheduler.annotation.FieldMatch;
+import fern.nail.art.nailscheduler.annotation.FieldMatchValidator;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 
-@FieldMatch.List({
-        @FieldMatch(field = "password",
-                fieldMatch = "repeatPassword",
-                message = "Passwords don't match!")
-})
+@FieldMatchValidator(field = "password",
+        fieldMatch = "repeatPassword",
+        message = "Passwords don't match!")
 public record UserRegistrationRequestDto(
         @NotBlank
         @Length(min = 5, max = 24)

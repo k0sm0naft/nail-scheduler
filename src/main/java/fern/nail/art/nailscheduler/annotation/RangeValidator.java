@@ -9,18 +9,13 @@ import jakarta.validation.Payload;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-@Constraint(validatedBy = FieldMatchValidator.class)
+@Constraint(validatedBy = TimeRangeValidator.class)
 @Target({TYPE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-public @interface FieldMatch {
-    String message() default "Fields don't match!";
-    String field();
-    String fieldMatch();
+public @interface RangeValidator {
+    String message() default "Range is wrong!";
+    String start();
+    String end();
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
-    @Target({TYPE, ANNOTATION_TYPE})
-    @Retention(RUNTIME)
-    @interface List {
-        FieldMatch[] value();
-    }
 }
