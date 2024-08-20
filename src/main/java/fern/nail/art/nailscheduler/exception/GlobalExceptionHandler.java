@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -28,6 +30,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+    @Autowired
+    private MessageSource messageSource;
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
@@ -47,38 +51,49 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpMessageNotReadableException ex,
             HttpHeaders headers,
             HttpStatusCode status,
-            WebRequest request) {
+            WebRequest request
+    ) {
         return getResponseEntity(HttpStatus.valueOf(status.value()), ex.getLocalizedMessage());
     }
 
     @ExceptionHandler(RegistrationException.class)
-    protected ResponseEntity<Object> handleRegistration(RegistrationException ex) {
-        return getResponseEntity(CONFLICT, ex.getMessage());
+    protected ResponseEntity<Object> handleRegistration(
+            RegistrationException ex,
+            WebRequest request
+    ) {
+        String localizedMessage =
+                messageSource.getMessage("error.user.exist", null, request.getLocale());
+        return getResponseEntity(CONFLICT, localizedMessage.formatted(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    protected ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
-        return getResponseEntity(FORBIDDEN, ex.getMessage());
+    protected ResponseEntity<Object> handleAccessDenied(
+            AccessDeniedException ex,
+            WebRequest request
+    ) {
+        return getResponseEntity(FORBIDDEN, ex.getLocalizedMessage());
     }
 
     @ExceptionHandler({JwtException.class, AuthenticationException.class})
-    protected ResponseEntity<Object> handleAuthenticationException(Exception ex) {
-        return getResponseEntity(UNAUTHORIZED, ex.getMessage());
+    protected ResponseEntity<Object> handleAuthenticationException(
+            Exception ex,
+            WebRequest request
+    ) {
+        return getResponseEntity(UNAUTHORIZED, ex.getLocalizedMessage());
     }
 
     @ExceptionHandler({Exception.class})
-    protected ResponseEntity<Object> handleNotIncludedExceptions(
-            Exception ex) {
+    protected ResponseEntity<Object> handleNotIncludedExceptions(Exception ex, WebRequest request) {
         return getResponseEntity(INTERNAL_SERVER_ERROR, ex.getLocalizedMessage());
     }
 
-    private String getErrorMessage(ObjectError e) {
-        if (e instanceof FieldError fieldError) {
+    private String getErrorMessage(ObjectError error) {
+        if (error instanceof FieldError fieldError) {
             String field = fieldError.getField();
-            String message = e.getDefaultMessage();
+            String message = fieldError.getDefaultMessage();
             return field + " " + message;
         }
-        return e.getDefaultMessage();
+        return error.getDefaultMessage();
     }
 
     private ResponseEntity<Object> getResponseEntity(HttpStatus status, Object error) {

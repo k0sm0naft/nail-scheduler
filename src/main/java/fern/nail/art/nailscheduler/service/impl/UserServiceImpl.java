@@ -32,8 +32,7 @@ public class UserServiceImpl implements UserService {
 
         String username = userRequestDto.username();
         if (userRepository.findByUsername(username).isPresent()) {
-            throw new RegistrationException(
-                    "User already exist with username \"%s\"".formatted(username));
+            throw new RegistrationException(username);
         }
 
         User user = userMapper.toModel(userRequestDto);
