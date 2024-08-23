@@ -77,13 +77,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
-    @ExceptionHandler(BusySlotException.class)
-    protected ResponseEntity<Object> handleBusySlot(
-            BusySlotException ex,
+    @ExceptionHandler(SlotConflictedException.class)
+    protected ResponseEntity<Object> handleSlotConflicted(
+            SlotConflictedException ex,
             WebRequest request
     ) {
         String localizedMessage =
-                messageSource.getMessage("error.busy.slot", null, request.getLocale());
+                messageSource.getMessage("error.slot.conflicted", null, request.getLocale());
+        return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
+    }
+
+    @ExceptionHandler(SlotNotAvailableException.class)
+    protected ResponseEntity<Object> handleSlotNotAvailable(
+            SlotNotAvailableException ex,
+            WebRequest request
+    ) {
+        String localizedMessage =
+                messageSource.getMessage("error.slot.not.available", null, request.getLocale());
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 

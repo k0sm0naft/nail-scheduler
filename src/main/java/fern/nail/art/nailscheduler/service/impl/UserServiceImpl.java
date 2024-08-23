@@ -10,7 +10,6 @@ import fern.nail.art.nailscheduler.repository.RoleRepository;
 import fern.nail.art.nailscheduler.repository.UserRepository;
 import fern.nail.art.nailscheduler.service.UserService;
 import fern.nail.art.nailscheduler.util.PhoneNumberFormatter;
-import java.time.LocalDateTime;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,7 +35,6 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.toModel(userRequestDto);
-        user.setRegisteredAt(LocalDateTime.now());
         user.setRoles(Set.of(roleRepository.getByName(Role.RoleName.ROLE_CLIENT)));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setPhone(PhoneNumberFormatter.getFormatter().normalize(user.getPhone()));
