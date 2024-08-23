@@ -5,8 +5,8 @@ import static fern.nail.art.nailscheduler.model.Appointment.Status.CONFIRMED;
 
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
+import fern.nail.art.nailscheduler.exception.AppointmentStatusException;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
-import fern.nail.art.nailscheduler.exception.SlotNotAvailableException;
 import fern.nail.art.nailscheduler.mapper.AppointmentMapper;
 import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.Slot;
@@ -32,11 +32,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public AppointmentResponseDto create(AppointmentRequestDto requestDto, User user) {
         Appointment appointment = appointmentMapper.toModel(requestDto);
-        validateAvailability(appointment);
         Slot slot = slotAvailabilityService
                 .changeSlotAvailability(appointment.getSlot().getId(), false);
         appointment.setSlot(slot);
         appointment.setClientId(user.getId());
+        appointment.setStatus(Appointment.Status.PENDING);
         appointment = appointmentRepository.save(appointment);
         return appointmentMapper.toDto(appointment);
     }
@@ -45,8 +45,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public AppointmentResponseDto changeStatus(Long appointmentId, boolean isConfirmed, User user) {
         Appointment appointment = getAppointment(appointmentId, user);
+
+        Appointment.Status status = appointment.getStatus();
+        if (status == CANCELED && !isConfirmed || status == CONFIRMED && isConfirmed) {
+            throw new AppointmentStatusException(status);
+        }
+
         appointment.setStatus(isConfirmed ? CONFIRMED : CANCELED);
-        appointment.getSlot().setIsAvailable(!isConfirmed);
+        slotAvailabilityService.changeSlotAvailability(appointment.getSlot().getId(), !isConfirmed);
         appointment = appointmentRepository.save(appointment);
         return appointmentMapper.toDto(appointment);
     }
@@ -71,15 +77,9 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public void delete(Long appointmentId) {
+        //todo: can delete if canceled? or also that is in past?
         validateExistence(appointmentId);
         appointmentRepository.deleteById(appointmentId);
-    }
-
-    private void validateAvailability(Appointment appointment) {
-        Slot s = appointment.getSlot();
-        if (!s.getIsAvailable()) {
-            throw new SlotNotAvailableException(s.getDate(), s.getStartTime(), s.getEndTime());
-        }
     }
 
     private void validateExistence(Long appointmentId) {

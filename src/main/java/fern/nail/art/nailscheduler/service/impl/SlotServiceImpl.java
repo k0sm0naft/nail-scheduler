@@ -4,7 +4,7 @@ import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
 import fern.nail.art.nailscheduler.event.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
-import fern.nail.art.nailscheduler.exception.SlotConflictedException;
+import fern.nail.art.nailscheduler.exception.SlotConflictException;
 import fern.nail.art.nailscheduler.mapper.SlotMapper;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
@@ -32,6 +32,7 @@ public class SlotServiceImpl implements SlotService {
     public SlotResponseDto create(SlotRequestDto slotRequestDto) {
         validateTime(slotRequestDto, slot -> true);
         Slot slot = slotMapper.toModel(slotRequestDto);
+        slot.setIsAvailable(true);
         slot = slotRepository.save(slot);
         return slotMapper.toDto(slot);
     }
@@ -42,8 +43,9 @@ public class SlotServiceImpl implements SlotService {
         validateExistence(slotId);
         validateTime(slotRequestDto, slot -> slot.getId() != slotId);
         Slot slot = slotMapper.toModel(slotRequestDto);
-        //todo: slot can be not available, bat it change after update, because it create new slot with available = true!!
+        Slot slotFromDb = slotRepository.getReferenceById(slotId);
         slot.setId(slotId);
+        slot.setIsAvailable(slotFromDb.getIsAvailable());
         slot = slotRepository.save(slot);
         return slotMapper.toDto(slot);
     }
@@ -68,7 +70,6 @@ public class SlotServiceImpl implements SlotService {
     @Override
     @Transactional
     public void delete(Long slotId, User user) {
-        validateExistence(slotId);
         eventPublisher.publishEvent(new SlotDeletedEvent(slotId, user));
         slotRepository.deleteById(slotId);
     }
@@ -87,7 +88,7 @@ public class SlotServiceImpl implements SlotService {
                                        .anyMatch(slot -> start.isBefore(slot.getEndTime())
                                                && end.isAfter(slot.getStartTime()));
         if (isBusy) {
-            throw new SlotConflictedException(slotRequestDto.date(), start, end);
+            throw new SlotConflictException(slotMapper.toModel(slotRequestDto));
         }
     }
 

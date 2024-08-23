@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     List<Appointment> findAllBySlotId(Long slotId);
 
-    @Query("FROM Appointment a JOIN FETCH a.slot WHERE a.id = :slotId")
-    Optional<Appointment> findByIdWithSlots(Long slotId);
+    @Query("FROM Appointment a JOIN FETCH a.slot WHERE a.id = :id")
+    Optional<Appointment> findByIdWithSlots(Long id);
 
     @Query("FROM Appointment a JOIN FETCH a.slot")
     List<Appointment> findAllWithSlots();

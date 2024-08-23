@@ -1,6 +1,7 @@
 package fern.nail.art.nailscheduler.service.impl;
 
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
+import fern.nail.art.nailscheduler.exception.SlotAvailabilityException;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotAvailabilityService;
@@ -15,11 +16,15 @@ public class SlotAvailabilityServiceImpl implements SlotAvailabilityService {
 
     @Override
     @Transactional
-    public Slot changeSlotAvailability(Long slotId, boolean isAvailable) {
+    public Slot changeSlotAvailability(Long slotId, boolean idAvailable) {
         Slot slot =
                 slotRepository.findById(slotId)
                               .orElseThrow(() -> new EntityNotFoundException(Slot.class, slotId));
-        slot.setIsAvailable(isAvailable);
+        boolean oldIdAvailable = slot.getIsAvailable();
+        if (idAvailable == oldIdAvailable) {
+            throw new SlotAvailabilityException(slot);
+        }
+        slot.setIsAvailable(!slot.getIsAvailable());
         return slotRepository.save(slot);
     }
 }

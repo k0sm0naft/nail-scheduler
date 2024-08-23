@@ -14,8 +14,6 @@ public record AppointmentResponseDto(
 
         String status,
 
-        LocalDateTime createdAt,
-
-        LocalDateTime updatedAt
+        LocalDateTime createdAt
 ) {
 }

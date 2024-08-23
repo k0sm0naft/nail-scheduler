@@ -39,19 +39,3 @@ databaseChangeLog:
                   defaultValueBoolean: false
                   constraints:
                     nullable: false
-              - column:
-                  name: created_at
-                  type: timestamp
-                  constraints:
-                    nullable: false
-              - column:
-                  name: updated_at
-                  type: timestamp
-                  constraints:
-                    nullable: false
-              - column:
-                  name: is_deleted
-                  type: boolean
-                  defaultValueBoolean: false
-                  constraints:
-                    nullable: false

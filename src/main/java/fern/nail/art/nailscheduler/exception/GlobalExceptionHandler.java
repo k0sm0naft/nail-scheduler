@@ -58,50 +58,42 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(RegistrationException.class)
-    protected ResponseEntity<Object> handleRegistration(
-            RegistrationException ex,
-            WebRequest request
-    ) {
+    protected ResponseEntity<Object> handleRegistration(Exception ex, WebRequest request) {
         String localizedMessage =
                 messageSource.getMessage("error.user.exist", null, request.getLocale());
         return getResponseEntity(CONFLICT, localizedMessage.formatted(ex.getMessage()));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    protected ResponseEntity<Object> handleEntityNotFound(
-            EntityNotFoundException ex,
-            WebRequest request
-    ) {
+    protected ResponseEntity<Object> handleEntityNotFound(Exception ex, WebRequest request) {
         String localizedMessage =
                 messageSource.getMessage("error.entity.not.found", null, request.getLocale());
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
-    @ExceptionHandler(SlotConflictedException.class)
-    protected ResponseEntity<Object> handleSlotConflicted(
-            SlotConflictedException ex,
-            WebRequest request
-    ) {
+    @ExceptionHandler(SlotConflictException.class)
+    protected ResponseEntity<Object> handleSlotConflicted(Exception ex, WebRequest request) {
         String localizedMessage =
                 messageSource.getMessage("error.slot.conflicted", null, request.getLocale());
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
-    @ExceptionHandler(SlotNotAvailableException.class)
-    protected ResponseEntity<Object> handleSlotNotAvailable(
-            SlotNotAvailableException ex,
-            WebRequest request
-    ) {
+    @ExceptionHandler(SlotAvailabilityException.class)
+    protected ResponseEntity<Object> handleSlotAvailability(Exception ex, WebRequest request) {
         String localizedMessage =
-                messageSource.getMessage("error.slot.not.available", null, request.getLocale());
+                messageSource.getMessage("error.slot.availability", null, request.getLocale());
+        return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AppointmentStatusException.class)
+    protected ResponseEntity<Object> handleAppointmentStatus(Exception ex, WebRequest request) {
+        String localizedMessage =
+                messageSource.getMessage("error.appointment.status", null, request.getLocale());
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    protected ResponseEntity<Object> handleAccessDenied(
-            AccessDeniedException ex,
-            WebRequest request
-    ) {
+    protected ResponseEntity<Object> handleAccessDenied(Exception ex, WebRequest request) {
         return getResponseEntity(FORBIDDEN, ex.getLocalizedMessage());
     }
 
