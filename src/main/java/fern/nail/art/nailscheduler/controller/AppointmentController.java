@@ -64,7 +64,7 @@ public class AppointmentController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ROLE_MASTER')")
-    public void delete(@PathVariable Long id) {
-        appointmentService.delete(id);
+    public void delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
+        appointmentService.delete(id, user);
     }
 }

@@ -16,8 +16,10 @@ import fern.nail.art.nailscheduler.service.AppointmentService;
 import fern.nail.art.nailscheduler.service.SlotAvailabilityService;
 import fern.nail.art.nailscheduler.service.UserService;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -34,11 +36,18 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentMapper.toModel(requestDto);
         Slot slot = slotAvailabilityService
                 .changeSlotAvailability(appointment.getSlot().getId(), false);
+        validateAccess(slot.getIsPublished(), user);
         appointment.setSlot(slot);
         appointment.setClientId(user.getId());
         appointment.setStatus(Appointment.Status.PENDING);
         appointment = appointmentRepository.save(appointment);
         return appointmentMapper.toDto(appointment);
+    }
+
+    private void validateAccess(Boolean isPublished, User user) {
+        if (!isPublished && !userService.isMaster(user)) {
+            throw new AccessDeniedException("You are not allowed to access this appointment");
+        }
     }
 
     @Override
@@ -76,16 +85,23 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public void delete(Long appointmentId) {
-        //todo: can delete if canceled? or also that is in past?
-        validateExistence(appointmentId);
-        appointmentRepository.deleteById(appointmentId);
+    @Transactional
+    public void delete(Long appointmentId, User user) {
+        Appointment appointment = getAppointment(appointmentId, user);
+        delete(appointment);
     }
 
-    private void validateExistence(Long appointmentId) {
-        if (!appointmentRepository.existsById(appointmentId)) {
-            throw new EntityNotFoundException(Appointment.class, appointmentId);
+    @Override
+    @Transactional
+    public void delete(Appointment appointment) {
+        Slot slot = appointment.getSlot();
+        LocalDateTime slotEndTime = LocalDateTime.of(slot.getDate(), slot.getEndTime());
+
+        if (appointment.getStatus() != CANCELED && slotEndTime.isBefore(LocalDateTime.now())) {
+            throw new AppointmentStatusException(appointment.getStatus());
         }
+
+        appointmentRepository.deleteById(appointment.getId());
     }
 
     private Appointment getAppointment(Long appointmentId, User user) {

@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.service;
 
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
+import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.User;
 import java.util.List;
 
@@ -14,5 +15,7 @@ public interface AppointmentService {
 
     List<AppointmentResponseDto> getAll(User user);
 
-    void delete(Long appointmentId);
+    void delete(Long appointmentId, User user);
+
+    void delete(Appointment appointment);
 }

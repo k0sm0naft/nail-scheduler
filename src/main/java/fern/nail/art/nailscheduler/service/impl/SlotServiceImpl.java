@@ -70,6 +70,7 @@ public class SlotServiceImpl implements SlotService {
     @Override
     @Transactional
     public void delete(Long slotId, User user) {
+        validateExistence(slotId);
         eventPublisher.publishEvent(new SlotDeletedEvent(slotId, user));
         slotRepository.deleteById(slotId);
     }
