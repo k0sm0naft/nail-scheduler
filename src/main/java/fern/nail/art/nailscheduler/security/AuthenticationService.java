@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.security;
 
 import fern.nail.art.nailscheduler.dto.user.UserLoginRequestDto;
 import fern.nail.art.nailscheduler.dto.user.UserLoginResponseDto;
+import fern.nail.art.nailscheduler.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +19,7 @@ public class AuthenticationService {
         final Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         userLoginRequestDto.username(), userLoginRequestDto.password()));
-        String generatedToken = jwtUtil.generateToken(authentication.getName());
+        String generatedToken = jwtUtil.generateToken((User) authentication.getPrincipal());
         return new UserLoginResponseDto(generatedToken);
     }
 }

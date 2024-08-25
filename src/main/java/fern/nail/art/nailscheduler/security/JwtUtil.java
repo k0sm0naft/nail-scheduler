@@ -1,12 +1,19 @@
 package fern.nail.art.nailscheduler.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fern.nail.art.nailscheduler.model.Role;
+import fern.nail.art.nailscheduler.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.function.Function;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,9 +28,14 @@ public class JwtUtil {
         this.secret = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(User user) {
+        List<String> roles = user.getRoles().stream()
+                                 .map(Role::getAuthority)
+                                 .toList();
         return Jwts.builder()
-                   .subject(username)
+                   .subject(user.getUsername())
+                   .claim("id", user.getId())
+                   .claim("roles", roles)
                    .issuedAt(new Date())
                    .expiration(new Date(System.currentTimeMillis() + expiration))
                    .signWith(secret)
@@ -34,23 +46,27 @@ public class JwtUtil {
         if (token == null) {
             return false;
         }
-        final Jws<Claims> claims = Jwts.parser()
-                                       .verifyWith(secret)
-                                       .build()
-                .parseSignedClaims(token);
+        final Jws<Claims> claims = getParser().parseSignedClaims(token);
         return claims.getPayload().getExpiration().after(new Date());
     }
 
-    public String getUserName(String token) {
-        return getClaimFromToken(token, Claims::getSubject);
+    public User getUser(String token) {
+        final Claims claims = getParser().parseSignedClaims(token).getPayload();
+        User user = new User();
+        user.setId(claims.get("id", Long.class));
+        user.setUsername(claims.getSubject());
+
+        ObjectMapper mapper = new ObjectMapper();
+        List<String> rolesAsStrings =
+                mapper.convertValue(claims.get("roles"), new TypeReference<>() {});
+        Set<Role> roles = rolesAsStrings.stream()
+                                        .map(roleName -> new Role(Role.RoleName.valueOf(roleName)))
+                                        .collect(Collectors.toSet());
+        user.setRoles(roles);
+        return user;
     }
 
-    private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = Jwts.parser()
-                .verifyWith(secret)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claimsResolver.apply(claims);
+    private JwtParser getParser() {
+        return Jwts.parser().verifyWith(secret).build();
     }
 }
