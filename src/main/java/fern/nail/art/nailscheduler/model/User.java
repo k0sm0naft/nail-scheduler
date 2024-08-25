@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
@@ -45,9 +46,11 @@ public class User implements UserDetails {
 
     private String viberId;
 
+    @Column(nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime registeredAt;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),

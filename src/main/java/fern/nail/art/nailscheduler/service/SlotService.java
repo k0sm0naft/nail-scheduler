@@ -14,5 +14,5 @@ public interface SlotService {
 
     List<SlotResponseDto> getAll(User user);
 
-    void delete(Long slotId);
+    void delete(Long slotId, User user);
 }

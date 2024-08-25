@@ -2,8 +2,9 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
-import fern.nail.art.nailscheduler.exception.BusySlotException;
+import fern.nail.art.nailscheduler.event.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
+import fern.nail.art.nailscheduler.exception.SlotConflictException;
 import fern.nail.art.nailscheduler.mapper.SlotMapper;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
@@ -11,11 +12,11 @@ import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotService;
 import fern.nail.art.nailscheduler.service.UserService;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,12 +25,14 @@ public class SlotServiceImpl implements SlotService {
     private final SlotRepository slotRepository;
     private final SlotMapper slotMapper;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public SlotResponseDto create(SlotRequestDto slotRequestDto) {
         validateTime(slotRequestDto, slot -> true);
         Slot slot = slotMapper.toModel(slotRequestDto);
+        slot.setIsAvailable(true);
         slot = slotRepository.save(slot);
         return slotMapper.toDto(slot);
     }
@@ -40,8 +43,9 @@ public class SlotServiceImpl implements SlotService {
         validateExistence(slotId);
         validateTime(slotRequestDto, slot -> slot.getId() != slotId);
         Slot slot = slotMapper.toModel(slotRequestDto);
+        Slot slotFromDb = slotRepository.getReferenceById(slotId);
         slot.setId(slotId);
-        slot.setUpdatedAt(LocalDateTime.now());
+        slot.setIsAvailable(slotFromDb.getIsAvailable());
         slot = slotRepository.save(slot);
         return slotMapper.toDto(slot);
     }
@@ -65,8 +69,9 @@ public class SlotServiceImpl implements SlotService {
 
     @Override
     @Transactional
-    public void delete(Long slotId) {
+    public void delete(Long slotId, User user) {
         validateExistence(slotId);
+        eventPublisher.publishEvent(new SlotDeletedEvent(slotId, user));
         slotRepository.deleteById(slotId);
     }
 
@@ -84,7 +89,7 @@ public class SlotServiceImpl implements SlotService {
                                        .anyMatch(slot -> start.isBefore(slot.getEndTime())
                                                && end.isAfter(slot.getStartTime()));
         if (isBusy) {
-            throw new BusySlotException(slotRequestDto.date(), start, end);
+            throw new SlotConflictException(slotMapper.toModel(slotRequestDto));
         }
     }
 

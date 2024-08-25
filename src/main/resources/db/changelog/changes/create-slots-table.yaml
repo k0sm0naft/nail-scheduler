@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: create-slot-table
+      id: create-slots-table
       author: Artem_Akymenko
       changes:
         - createTable:
@@ -37,15 +37,5 @@ databaseChangeLog:
                   name: is_published
                   type: boolean
                   defaultValueBoolean: false
-                  constraints:
-                    nullable: false
-              - column:
-                  name: created_at
-                  type: timestamp
-                  constraints:
-                    nullable: false
-              - column:
-                  name: updated_at
-                  type: timestamp
                   constraints:
                     nullable: false

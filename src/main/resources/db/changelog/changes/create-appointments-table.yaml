@@ -3,8 +3,6 @@ databaseChangeLog:
       id: create-role-table
       author: Artem_Akymenko
       changes:
-        - sql:
-            sql: "CREATE TYPE appointment_status AS ENUM ('CONFIRMED', 'CANCELED', 'PENDING');"
         - createTable:
             tableName: appointments
             columns:
@@ -33,6 +31,11 @@ databaseChangeLog:
                   type: varchar(400)
               - column:
                   name: status
-                  type: appointment_status
+                  type: varchar
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
                   constraints:
                     nullable: false

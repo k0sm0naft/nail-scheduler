@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,14 +30,8 @@ public class Slot {
     private LocalTime endTime;
 
     @Column(nullable = false)
-    private Boolean isPublished = false;
+    private Boolean isAvailable;
 
     @Column(nullable = false)
-    private Boolean isAvailable = true;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private Boolean isPublished;
 }
