@@ -44,12 +44,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         return appointmentMapper.toDto(appointment);
     }
 
-    private void validateAccess(Boolean isPublished, User user) {
-        if (!isPublished && !userService.isMaster(user)) {
-            throw new AccessDeniedException("You are not allowed to access this appointment");
-        }
-    }
-
     @Override
     @Transactional
     public AppointmentResponseDto changeStatus(Long appointmentId, boolean isConfirmed, User user) {
@@ -102,6 +96,12 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointmentRepository.deleteById(appointment.getId());
+    }
+
+    private void validateAccess(Boolean isPublished, User user) {
+        if (!isPublished && !userService.isMaster(user)) {
+            throw new AccessDeniedException("Access denied. User ID: %s.".formatted(user.getId()));
+        }
     }
 
     private Appointment getAppointment(Long appointmentId, User user) {

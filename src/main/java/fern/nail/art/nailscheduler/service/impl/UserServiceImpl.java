@@ -2,6 +2,8 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import fern.nail.art.nailscheduler.dto.user.UserRegistrationRequestDto;
 import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
+import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
+import fern.nail.art.nailscheduler.dto.user.UserUpdateRequestDto;
 import fern.nail.art.nailscheduler.exception.RegistrationException;
 import fern.nail.art.nailscheduler.mapper.UserMapper;
 import fern.nail.art.nailscheduler.model.Role;
@@ -26,8 +28,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto register(UserRegistrationRequestDto userRequestDto) throws
-            RegistrationException {
+    public UserResponseDto register(UserRegistrationRequestDto userRequestDto)
+            throws RegistrationException {
 
         String username = userRequestDto.username();
         if (userRepository.findByUsername(username).isPresent()) {
@@ -45,6 +47,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean isMaster(User user) {
         return user.getRoles().stream()
-                .anyMatch(role -> role.getName() == Role.RoleName.ROLE_MASTER);
+                   .anyMatch(role -> role.getName() == Role.RoleName.ROLE_MASTER);
+    }
+
+    @Override
+    public UserResponseDto getInfo(Long userId) {
+        User user = userRepository.getReferenceById(userId);
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    public UserResponseDto update(UserUpdateRequestDto userRequestDto) {
+        return null;
+    }
+
+    @Override
+    public void updatePassword(Long userId, UserUpdatePasswordDto userRequestDto) {
     }
 }

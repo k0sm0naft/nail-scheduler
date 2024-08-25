@@ -96,7 +96,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleAccessDenied(Exception ex, WebRequest request) {
         String localizedMessage =
                 messageSource.getMessage("error.access.denied", null, request.getLocale());
-        return getResponseEntity(FORBIDDEN, localizedMessage);
+        StringBuilder message = new StringBuilder(localizedMessage)
+                .append(System.lineSeparator())
+                .append("Original message: ")
+                .append(ex.getMessage());
+        return getResponseEntity(FORBIDDEN, message.toString());
     }
 
     @ExceptionHandler({JwtException.class, AuthenticationException.class})
