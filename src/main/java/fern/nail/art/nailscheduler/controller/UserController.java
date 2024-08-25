@@ -4,7 +4,6 @@ import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdateRequestDto;
 import fern.nail.art.nailscheduler.model.User;
-import fern.nail.art.nailscheduler.security.AuthenticationService;
 import fern.nail.art.nailscheduler.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +40,11 @@ public class UserController {
     @PostMapping("/update")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasRole('ROLE_MASTER')")
-    public UserResponseDto updateInfo(@RequestBody @Valid UserUpdateRequestDto updateRequestDto) {
-        return userService.update(updateRequestDto);
+    public UserResponseDto updateInfo(
+            @RequestBody @Valid UserUpdateRequestDto updateRequestDto,
+            @AuthenticationPrincipal User user
+    ) {
+        return userService.update(user.getId(), updateRequestDto);
     }
 
     @PostMapping("/password")

@@ -92,6 +92,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
+    @ExceptionHandler(PhoneDuplicationException.class)
+    protected ResponseEntity<Object> handlePhoneDuplication(Exception ex, WebRequest request) {
+        String localizedMessage =
+                messageSource.getMessage("error.phone.exist", null, request.getLocale());
+        return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     protected ResponseEntity<Object> handleAccessDenied(Exception ex, WebRequest request) {
         String localizedMessage =
