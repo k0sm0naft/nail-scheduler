@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SlotRepository extends JpaRepository<Slot, Long> {
     List<Slot> findAllByDate(LocalDate date);
+
+    List<Slot> findAllByDateBetween(LocalDate startDate, LocalDate endDate);
 }

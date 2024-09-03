@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.controller;
 
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
+import fern.nail.art.nailscheduler.model.PeriodType;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.service.SlotService;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,8 +56,10 @@ public class SlotController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<SlotResponseDto> getAll(@AuthenticationPrincipal User user) {
-        return slotService.getAll(user);
+    public List<SlotResponseDto> getByPeriod(
+            @RequestParam("periodType") PeriodType type,
+            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset) {
+        return slotService.getAllByPeriod(type, offset);
     }
 
     @DeleteMapping("/{id}")

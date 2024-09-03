@@ -5,12 +5,16 @@ import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotConflictException;
 import fern.nail.art.nailscheduler.mapper.SlotMapper;
+import fern.nail.art.nailscheduler.model.PeriodType;
+import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotService;
+import fern.nail.art.nailscheduler.service.StrategyHandler;
 import fern.nail.art.nailscheduler.service.UserService;
+import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
 import jakarta.transaction.Transactional;
 import java.time.LocalTime;
 import java.util.List;
@@ -26,6 +30,7 @@ public class SlotServiceImpl implements SlotService {
     private final SlotMapper slotMapper;
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
+    private final StrategyHandler strategyHandler;
 
     @Override
     @Transactional
@@ -60,11 +65,13 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public List<SlotResponseDto> getAll(User user) {
-        return slotRepository.findAll().stream()
-                             .filter(s -> isAccessible(user, s))
-                             .map(slotMapper::toDto)
-                             .toList();
+    public List<SlotResponseDto> getAllByPeriod(PeriodType periodType, int offset) {
+        PeriodStrategy strategy = strategyHandler.getPeriodStrategy(periodType);
+        Range range = strategy.calculateRange(offset);
+        List<Slot> slots = slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
+        return slots.stream()
+                    .map(slotMapper::toDto)
+                    .toList();
     }
 
     @Override
