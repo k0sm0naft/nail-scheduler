@@ -2,11 +2,11 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
-import fern.nail.art.nailscheduler.event.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotConflictException;
 import fern.nail.art.nailscheduler.mapper.SlotMapper;
 import fern.nail.art.nailscheduler.model.Slot;
+import fern.nail.art.nailscheduler.model.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotService;
