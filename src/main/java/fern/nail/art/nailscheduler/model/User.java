@@ -1,7 +1,10 @@
 package fern.nail.art.nailscheduler.model;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,9 +12,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,6 +51,13 @@ public class User implements UserDetails {
     private String telegramId;
 
     private String viberId;
+
+    @ElementCollection
+    @CollectionTable(name = "user_procedure_times", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "procedure_type")
+    @Column(name = "average_time")
+    @MapKeyEnumerated(EnumType.STRING)
+    private Map<ProcedureType, Integer> avgProcedureTime;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

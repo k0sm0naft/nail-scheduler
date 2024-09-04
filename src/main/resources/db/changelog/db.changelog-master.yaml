@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/create-appointments-table.yaml
   - include:
       file: db/changelog/changes/insert-roles.yml
+  - include:
+      file: db/changelog/changes/create-user_procedure_times-table.yml
