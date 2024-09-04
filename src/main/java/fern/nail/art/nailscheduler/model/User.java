@@ -57,7 +57,7 @@ public class User implements UserDetails {
     @MapKeyColumn(name = "procedure_type")
     @Column(name = "average_time")
     @MapKeyEnumerated(EnumType.STRING)
-    private Map<ProcedureType, Integer> avgProcedureTime;
+    private Map<ProcedureType, Integer> avgProcedureTimes;
 
     @Column(nullable = false, updatable = false)
     @CreationTimestamp

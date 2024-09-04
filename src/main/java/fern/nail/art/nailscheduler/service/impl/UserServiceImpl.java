@@ -1,20 +1,27 @@
 package fern.nail.art.nailscheduler.service.impl;
 
+import fern.nail.art.nailscheduler.dto.user.UpdateAvgProcedureTimesDto;
+import fern.nail.art.nailscheduler.dto.user.UserFullResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserRegistrationRequestDto;
 import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdateRequestDto;
+import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.PhoneDuplicationException;
 import fern.nail.art.nailscheduler.exception.RegistrationException;
+import fern.nail.art.nailscheduler.mapper.AvgProcedureTimesMapper;
 import fern.nail.art.nailscheduler.mapper.UserMapper;
+import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Role;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.RoleRepository;
 import fern.nail.art.nailscheduler.repository.UserRepository;
 import fern.nail.art.nailscheduler.service.UserService;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +33,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AvgProcedureTimesMapper avgProcedureTimesMapper;
+    @Value("${time.avg.manicure}")
+    private Integer defaultAvgManicureTime;
+    @Value("${time.avg.pedicure}")
+    private Integer defaultAvgPedicureTime;
 
     @Override
     @Transactional
@@ -35,6 +47,7 @@ public class UserServiceImpl implements UserService {
         validatePhone(user);
         user.setRoles(Set.of(roleRepository.getByName(Role.RoleName.ROLE_CLIENT)));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setAvgProcedureTimes(getDefaultAvgProcedureTimes());
         user = userRepository.save(user);
         return userMapper.toDto(user);
     }
@@ -47,14 +60,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto getInfo(Long userId) {
-        User user = userRepository.getReferenceById(userId);
+        User user = getById(userId);
         return userMapper.toDto(user);
+    }
+
+    @Override
+    public UserFullResponseDto getFullInfo(Long userId) {
+        User user = getById(userId);
+        return userMapper.toFullDto(user);
     }
 
     @Override
     @Transactional
     public UserResponseDto update(Long userId, UserUpdateRequestDto userRequestDto) {
-        User user = userRepository.getReferenceById(userId);
+        User user = getById(userId);
         userMapper.updateFromDto(userRequestDto, user);
         user = userRepository.save(user);
         return userMapper.toDto(user);
@@ -63,9 +82,26 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updatePassword(Long userId, UserUpdatePasswordDto userRequestDto) {
-        User user = userRepository.getReferenceById(userId);
+        User user = getById(userId);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public UserFullResponseDto updateAvgProcedureTimes(
+            Long id, UpdateAvgProcedureTimesDto updateRequestDto) {
+        User user = getById(id);
+        Map<ProcedureType, Integer> newAvgProcedureTimes =
+                avgProcedureTimesMapper.toMap(updateRequestDto.avgProcedureTimes());
+        user.setAvgProcedureTimes(newAvgProcedureTimes);
+        user = userRepository.save(user);
+        return userMapper.toFullDto(user);
+    }
+
+    private User getById(Long id) {
+        return userRepository.findById(id)
+                             .orElseThrow(() -> new EntityNotFoundException(User.class, id));
     }
 
     private void validateUsername(String username) {
@@ -80,5 +116,12 @@ public class UserServiceImpl implements UserService {
                 && !optionalUser.get().getId().equals(user.getId())) {
             throw new PhoneDuplicationException(user.getPhone());
         }
+    }
+
+    private Map<ProcedureType, Integer> getDefaultAvgProcedureTimes() {
+        return Map.of(
+                ProcedureType.MANICURE, defaultAvgManicureTime,
+                ProcedureType.PEDICURE, defaultAvgPedicureTime
+        );
     }
 }
