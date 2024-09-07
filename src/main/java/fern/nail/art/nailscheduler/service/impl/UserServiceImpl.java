@@ -1,10 +1,6 @@
 package fern.nail.art.nailscheduler.service.impl;
 
-import fern.nail.art.nailscheduler.dto.user.UpdateProcedureTimesDto;
-import fern.nail.art.nailscheduler.dto.user.UserFullResponseDto;
-import fern.nail.art.nailscheduler.dto.user.UserRegistrationRequestDto;
-import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
-import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
+import fern.nail.art.nailscheduler.dto.user.ProcedureTimeDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdateRequestDto;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.PhoneDuplicationException;
@@ -34,15 +30,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto register(UserRegistrationRequestDto userRequestDto) {
-        validateUsername(userRequestDto.username());
-        User user = userMapper.toModel(userRequestDto);
+    public User register(User user) {
+        validateUsername(user.getUsername());
         validatePhone(user);
         user.setRoles(Set.of(roleRepository.getByName(Role.RoleName.ROLE_CLIENT)));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setProcedureTimes(procedureTimeService.getDefault(user));
-        user = userRepository.save(user);
-        return userMapper.toDto(user);
+        return userRepository.save(user);
     }
 
     @Override
@@ -52,43 +46,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto getInfo(Long userId) {
-        User user = getById(userId);
-        return userMapper.toDto(user);
+    public User getInfo(Long userId) {
+        return getById(userId);
     }
 
     @Override
-    public UserFullResponseDto getFullInfo(Long userId) {
-        User user = userRepository.findByIdWithProcedureTimes(userId)
-                                  .orElseThrow(
-                                          () -> new EntityNotFoundException(User.class, userId));
-        return userMapper.toFullDto(user);
-    }
-
-    @Override
-    @Transactional
-    public UserResponseDto update(Long userId, UserUpdateRequestDto userRequestDto) {
-        User user = getById(userId);
-        userMapper.updateFromDto(userRequestDto, user);
-        user = userRepository.save(user);
-        return userMapper.toDto(user);
+    public User getFullInfo(Long userId) {
+        return userRepository.findByIdWithProcedureTimes(userId)
+                             .orElseThrow(
+                                     () -> new EntityNotFoundException(User.class, userId));
     }
 
     @Override
     @Transactional
-    public void changePassword(Long userId, UserUpdatePasswordDto userRequestDto) {
+    public User update(Long userId, UserUpdateRequestDto requestDto) {
         User user = getById(userId);
-        user.setPassword(passwordEncoder.encode(userRequestDto.password()));
+        userMapper.updateFromDto(requestDto, user);
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String newPassword) {
+        User user = getById(userId);
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
     @Override
     @Transactional
-    public UserFullResponseDto updateProcedureTimes(Long id, UpdateProcedureTimesDto requestDto) {
+    public User updateProcedureTimes(Long id, Set<ProcedureTimeDto> procedureTimes) {
         User user = getById(id);
-        procedureTimeService.setToUser(requestDto, user);
-        user = userRepository.save(user);
-        return userMapper.toFullDto(user);
+        procedureTimeService.setToUser(procedureTimes, user);
+        return userRepository.save(user);
     }
 
     private User getById(Long id) {

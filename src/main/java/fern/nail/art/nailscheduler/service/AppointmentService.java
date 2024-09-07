@@ -1,19 +1,18 @@
 package fern.nail.art.nailscheduler.service;
 
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
 import fern.nail.art.nailscheduler.model.Appointment;
+import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.User;
 import java.util.List;
 
 public interface AppointmentService {
-    AppointmentResponseDto create(AppointmentRequestDto requestDto, User user);
+    Appointment create(Appointment appointment, ProcedureType procedure, User user);
 
-    AppointmentResponseDto changeStatus(Long appointmentId, boolean isConfirmed, User user);
+    Appointment changeStatus(Long appointmentId, boolean isConfirmed, User user);
 
-    AppointmentResponseDto get(Long appointmentId, User user);
+    Appointment get(Long appointmentId, User user);
 
-    List<AppointmentResponseDto> getAll(User user);
+    List<Appointment> getAll(User user);
 
     void delete(Long appointmentId, User user);
 

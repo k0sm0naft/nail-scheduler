@@ -34,7 +34,8 @@ public class Appointment {
     @JoinColumns({
             @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false),
             @JoinColumn(name = "procedure", referencedColumnName = "procedure", nullable = false)
-    })    private UserProcedureTime userProcedureTime;
+    })
+    private UserProcedureTime userProcedureTime;
 
     private String notes;
 

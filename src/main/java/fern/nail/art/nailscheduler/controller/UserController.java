@@ -5,6 +5,8 @@ import fern.nail.art.nailscheduler.dto.user.UserFullResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdateRequestDto;
+import fern.nail.art.nailscheduler.mapper.UserMapper;
+import fern.nail.art.nailscheduler.mapper.UserProcedureTimesMapper;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.service.UserService;
 import jakarta.validation.Valid;
@@ -25,36 +27,42 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final UserMapper userMapper;
+    private final UserProcedureTimesMapper procedureTimesMapper;
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
     public UserResponseDto get(@AuthenticationPrincipal User user) {
-        return userService.getInfo(user.getId());
+        user = userService.getInfo(user.getId());
+        return userMapper.toDto(user);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_MASTER')")
     public UserFullResponseDto get(@PathVariable Long id) {
-        return userService.getFullInfo(id);
+        User user = userService.getFullInfo(id);
+        return userMapper.toFullDto(user);
     }
 
-    @PostMapping("/update/me")
+    @PostMapping("/me")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public UserResponseDto updateInfo(
             @RequestBody @Valid UserUpdateRequestDto updateRequestDto,
             @AuthenticationPrincipal User user
     ) {
-        return userService.update(user.getId(), updateRequestDto);
+        User updatedUser = userService.update(user.getId(), updateRequestDto);
+        return userMapper.toDto(updatedUser);
     }
 
-    @PostMapping("/update/{id}")
+    @PostMapping("/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasRole('ROLE_MASTER')")
-    public UserResponseDto updateClientInfo(
+    public UserFullResponseDto updateClientInfo(
             @RequestBody @Valid UserUpdateRequestDto updateRequestDto,
             @PathVariable Long id) {
-        return userService.update(id, updateRequestDto);
+        User updatedUser = userService.update(id, updateRequestDto);
+        return userMapper.toFullDto(updatedUser);
     }
 
     @PostMapping("/procedureTimes/{id}")
@@ -63,7 +71,8 @@ public class UserController {
     public UserFullResponseDto updateProcedureTimes(
             @RequestBody @Valid UpdateProcedureTimesDto updateRequestDto,
             @PathVariable Long id) {
-        return userService.updateProcedureTimes(id, updateRequestDto);
+        User user = userService.updateProcedureTimes(id, updateRequestDto.procedureTimes());
+        return userMapper.toFullDto(user);
     }
 
     @PostMapping("/password")
@@ -72,7 +81,7 @@ public class UserController {
             @RequestBody @Valid UserUpdatePasswordDto updatePasswordDto,
             @AuthenticationPrincipal User user
     ) {
-        userService.changePassword(user.getId(), updatePasswordDto);
+        userService.changePassword(user.getId(), updatePasswordDto.password());
     }
 }
 

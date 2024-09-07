@@ -39,9 +39,11 @@ public class Slot {
     private Status status;
 
     public enum Status {
-        UNPUBLISHED, //todo invisible for clients
-        PUBLISHED, //todo visible for clients
-        SHIFTED, //todo after confirming appointment that makeshift it changes on published again (visible for clients)
-        DELETED //todo after confirming appointment changes it's will be deleted (invisible for clients)
+        UNPUBLISHED,
+        PUBLISHED,
+        //todo after confirming appointment that makeshift it changes on published again (visible)
+        SHIFTED,
+        //todo after confirming appointment changes it's will be deleted (invisible)
+        DELETED
     }
 }

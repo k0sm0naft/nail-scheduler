@@ -1,7 +1,6 @@
 package fern.nail.art.nailscheduler.service.impl;
 
-import fern.nail.art.nailscheduler.dto.user.UpdateProcedureTimesDto;
-import fern.nail.art.nailscheduler.dto.user.UserProcedureTimeDto;
+import fern.nail.art.nailscheduler.dto.user.ProcedureTimeDto;
 import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.model.UserProcedureTime;
@@ -31,12 +30,12 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
     }
 
     @Override
-    public void setToUser(UpdateProcedureTimesDto requestDto, User user) {
-        for (UserProcedureTimeDto procedureTimeDto : requestDto.procedureTimes()) {
+    public void setToUser(Set<ProcedureTimeDto> procedureTimes, User user) {
+        for (ProcedureTimeDto ptd : procedureTimes) {
             user.getProcedureTimes().stream()
-                .filter(upt -> upt.getId().getProcedure().equals(procedureTimeDto.procedure()))
+                .filter(upt -> upt.getId().getProcedure().equals(ptd.procedure()))
                 .findFirst()
-                .ifPresent(upt -> upt.setDuration(procedureTimeDto.duration()));
+                .ifPresent(upt -> upt.setDuration(ptd.duration()));
         }
     }
 

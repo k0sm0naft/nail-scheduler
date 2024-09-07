@@ -24,7 +24,7 @@ public interface UserMapper {
     User toModel(UserRegistrationRequestDto userRegistrationRequestDto);
 
     @Mapping(target = "phone", source = "phone", qualifiedByName = "normalizePhone")
-    void updateFromDto(UserUpdateRequestDto dto, @MappingTarget User user);
+    void updateFromDto(UserUpdateRequestDto userRequest, @MappingTarget User user);
 
     @Named("normalizePhone")
     default String normalizePhone(String phoneNumber) {

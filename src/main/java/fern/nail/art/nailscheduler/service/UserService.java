@@ -1,25 +1,22 @@
 package fern.nail.art.nailscheduler.service;
 
-import fern.nail.art.nailscheduler.dto.user.UpdateProcedureTimesDto;
-import fern.nail.art.nailscheduler.dto.user.UserFullResponseDto;
-import fern.nail.art.nailscheduler.dto.user.UserRegistrationRequestDto;
-import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
-import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
+import fern.nail.art.nailscheduler.dto.user.ProcedureTimeDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdateRequestDto;
 import fern.nail.art.nailscheduler.model.User;
+import java.util.Set;
 
 public interface UserService {
-    UserResponseDto register(UserRegistrationRequestDto userRequestDto);
+    User register(User user);
 
     boolean isMaster(User user);
 
-    UserResponseDto getInfo(Long userId);
+    User getInfo(Long userId);
 
-    UserFullResponseDto getFullInfo(Long userId);
+    User getFullInfo(Long userId);
 
-    UserResponseDto update(Long userId, UserUpdateRequestDto userRequestDto);
+    User update(Long userId, UserUpdateRequestDto updateRequestDto);
 
-    void changePassword(Long userId, UserUpdatePasswordDto userRequestDto);
+    void changePassword(Long userId, String newPassword);
 
-    UserFullResponseDto updateProcedureTimes(Long id, UpdateProcedureTimesDto updateRequestDto);
+    User updateProcedureTimes(Long id, Set<ProcedureTimeDto> procedureTimes);
 }

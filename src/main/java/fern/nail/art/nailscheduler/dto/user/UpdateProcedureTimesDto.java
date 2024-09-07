@@ -10,6 +10,6 @@ public record UpdateProcedureTimesDto(
         @NotNull
         @Valid
         @ValidEnumSize(enumClass = ProcedureType.class, message = "{validation.numbers.of.items}")
-        Set<UserProcedureTimeDto> procedureTimes
+        Set<ProcedureTimeDto> procedureTimes
 ) {
 }

@@ -5,13 +5,11 @@ import static fern.nail.art.nailscheduler.model.Appointment.Status.CONFIRMED;
 import static fern.nail.art.nailscheduler.model.Slot.Status.DELETED;
 import static fern.nail.art.nailscheduler.model.Slot.Status.UNPUBLISHED;
 
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
 import fern.nail.art.nailscheduler.exception.AppointmentStatusException;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotAvailabilityException;
-import fern.nail.art.nailscheduler.mapper.AppointmentMapper;
 import fern.nail.art.nailscheduler.model.Appointment;
+import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.AppointmentRepository;
@@ -31,29 +29,26 @@ import org.springframework.stereotype.Service;
 public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final UserService userService;
-    private final AppointmentMapper appointmentMapper;
     private final SlotService slotService;
     private final UserProcedureTimeService procedureTimeService;
 
-    @Override
     @Transactional
-    public AppointmentResponseDto create(AppointmentRequestDto requestDto, User user) {
-        Appointment appointment = appointmentMapper.toModel(requestDto);
+    @Override
+    public Appointment create(Appointment appointment, ProcedureType procedure, User user) {
         Slot slot = slotService.get(user, appointment.getSlot().getId());
         if (slot.getAppointment() != null) {
             throw new SlotAvailabilityException(slot);
         }
         slot.setAppointment(appointment);
         appointment.setSlot(slot);
-        appointment.setUserProcedureTime(procedureTimeService.get(requestDto.procedure(), user));
+        appointment.setUserProcedureTime(procedureTimeService.get(procedure, user));
         appointment.setStatus(Appointment.Status.PENDING);
-        appointment = appointmentRepository.save(appointment);
-        return appointmentMapper.toDto(appointment);
+        return appointmentRepository.save(appointment);
     }
 
     @Override
     @Transactional
-    public AppointmentResponseDto changeStatus(Long appointmentId, boolean isConfirmed, User user) {
+    public Appointment changeStatus(Long appointmentId, boolean isConfirmed, User user) {
         Appointment appointment = getAppointment(appointmentId, user);
 
         Appointment.Status status = appointment.getStatus();
@@ -61,34 +56,30 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new AppointmentStatusException(status);
         }
 
-        if (isConfirmed){
+        if (isConfirmed) {
             appointment.setStatus(CONFIRMED);
         } else {
             appointment.setStatus(CANCELED);
             appointment.getSlot().setAppointment(null);
         }
 
-        appointment = appointmentRepository.save(appointment);
-        return appointmentMapper.toDto(appointment);
+        return appointmentRepository.save(appointment);
     }
 
     @Override
-    public AppointmentResponseDto get(Long appointmentId, User user) {
-        Appointment appointment = getAppointment(appointmentId, user);
-        return appointmentMapper.toDto(appointment);
+    public Appointment get(Long appointmentId, User user) {
+        return getAppointment(appointmentId, user);
     }
 
     @Override
-    public List<AppointmentResponseDto> getAll(User user) {
+    public List<Appointment> getAll(User user) {
         List<Appointment> appointments;
         if (userService.isMaster(user)) {
             appointments = appointmentRepository.findAll();
         } else {
             appointments = appointmentRepository.findAllByClientIdWithSlot(user.getId());
         }
-        return appointments.stream()
-                           .map(appointmentMapper::toDto)
-                           .toList();
+        return appointments;
     }
 
     @Override

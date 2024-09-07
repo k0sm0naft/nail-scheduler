@@ -3,6 +3,8 @@ package fern.nail.art.nailscheduler.controller;
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
 import fern.nail.art.nailscheduler.dto.appointment.StatusDto;
+import fern.nail.art.nailscheduler.mapper.AppointmentMapper;
+import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.service.AppointmentService;
 import jakarta.validation.Valid;
@@ -26,13 +28,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AppointmentController {
     private final AppointmentService appointmentService;
+    private final AppointmentMapper appointmentMapper;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AppointmentResponseDto create(
             @RequestBody @Valid AppointmentRequestDto requestDto,
             @AuthenticationPrincipal User user) {
-        return appointmentService.create(requestDto, user);
+        Appointment appointment = appointmentMapper.toModel(requestDto);
+        appointment = appointmentService.create(appointment, requestDto.procedure(), user);
+        return appointmentMapper.toDto(appointment);
     }
 
     @PatchMapping("/{id}")
@@ -43,7 +48,9 @@ public class AppointmentController {
             @RequestBody @Valid StatusDto statusDto,
             @AuthenticationPrincipal User user
     ) {
-        return appointmentService.changeStatus(id, statusDto.isConfirmed(), user);
+        Appointment appointment =
+                appointmentService.changeStatus(id, statusDto.isConfirmed(), user);
+        return appointmentMapper.toDto(appointment);
     }
 
     @GetMapping("/{id}")
@@ -52,13 +59,17 @@ public class AppointmentController {
             @PathVariable Long id,
             @AuthenticationPrincipal User user
     ) {
-        return appointmentService.get(id, user);
+        Appointment appointment = appointmentService.get(id, user);
+        return appointmentMapper.toDto(appointment);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<AppointmentResponseDto> getAll(@AuthenticationPrincipal User user) {
-        return appointmentService.getAll(user);
+        List<Appointment> appointments = appointmentService.getAll(user);
+        return appointments.stream()
+                           .map(appointmentMapper::toDto)
+                           .toList();
     }
 
     @DeleteMapping("/{id}")

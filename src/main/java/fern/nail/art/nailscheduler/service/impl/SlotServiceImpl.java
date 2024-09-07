@@ -2,13 +2,9 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import static fern.nail.art.nailscheduler.model.Slot.Status.PUBLISHED;
 import static fern.nail.art.nailscheduler.model.Slot.Status.SHIFTED;
-import static fern.nail.art.nailscheduler.model.Slot.Status.UNPUBLISHED;
 
-import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
-import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotConflictException;
-import fern.nail.art.nailscheduler.mapper.SlotMapper;
 import fern.nail.art.nailscheduler.model.PeriodType;
 import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
@@ -32,7 +28,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SlotServiceImpl implements SlotService {
     private final SlotRepository slotRepository;
-    private final SlotMapper slotMapper;
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final StrategyHandler strategyHandler;
@@ -41,29 +36,23 @@ public class SlotServiceImpl implements SlotService {
 
     @Override
     @Transactional
-    public SlotResponseDto create(SlotRequestDto slotRequestDto) {
-        Slot slot = slotMapper.toModel(slotRequestDto);
+    public Slot create(Slot slot) {
         validateTime(slot);
-        slot = slotRepository.save(slot);
-        return slotMapper.toMasterDto(slot);
+        return slotRepository.save(slot);
     }
 
     @Override
     @Transactional
-    public SlotResponseDto update(SlotRequestDto slotRequestDto, Long slotId) {
+    public Slot update(Slot slot, Long slotId) {
         validateExistence(slotId);
-        Slot slot = slotMapper.toModel(slotRequestDto);
-        slot.setId(slotId);
         validateTime(slot);
-        slot.setStatus(slotRequestDto.isPublished() ? PUBLISHED : UNPUBLISHED);
-        slot = slotRepository.save(slot);
-        return slotMapper.toMasterDto(slot);
+        slot.setId(slotId);
+        return slotRepository.save(slot);
     }
 
     @Override
-    public SlotResponseDto get(Long slotId, User user) {
-        Slot slot = getSlot(slotId, user);
-        return getSlotResponseDto(user, slot);
+    public Slot get(Long slotId, User user) {
+        return getSlot(slotId, user);
     }
 
     @Override
@@ -72,13 +61,10 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public List<SlotResponseDto> getAllByPeriod(PeriodType periodType, int offset, User user) {
+    public List<Slot> getAllByPeriod(PeriodType periodType, int offset, User user) {
         PeriodStrategy strategy = strategyHandler.getPeriodStrategy(periodType);
         Range range = strategy.calculateRange(offset);
-        List<Slot> slots = slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
-        return slots.stream()
-                    .map(slot -> getSlotResponseDto(user, slot))
-                    .toList();
+        return slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
     }
 
     @Override
@@ -132,12 +118,5 @@ public class SlotServiceImpl implements SlotService {
                              .filter(s -> isAccessible(user, s))
                              .orElseThrow(
                                      () -> new EntityNotFoundException(Slot.class, slotId));
-    }
-
-    private SlotResponseDto getSlotResponseDto(User user, Slot slot) {
-        if (userService.isMaster(user)) {
-            return slotMapper.toMasterDto(slot);
-        }
-        return slotMapper.toPublicDto(slot);
     }
 }
