@@ -8,6 +8,6 @@ public record UserFullResponseDto(
         String phone,
         String firstName,
         String lastName,
-        Set<AvgProcedureTimeDto> avgProcedureTimes
+        Set<UserProcedureTimeDto> procedureTimes
 ) {
 }

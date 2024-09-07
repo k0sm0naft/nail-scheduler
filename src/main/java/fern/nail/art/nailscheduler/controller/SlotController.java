@@ -58,8 +58,10 @@ public class SlotController {
     @ResponseStatus(HttpStatus.OK)
     public List<SlotResponseDto> getByPeriod(
             @RequestParam("periodType") PeriodType type,
-            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset) {
-        return slotService.getAllByPeriod(type, offset);
+            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
+            @AuthenticationPrincipal User user
+    ) {
+        return slotService.getAllByPeriod(type, offset, user);
     }
 
     @DeleteMapping("/{id}")

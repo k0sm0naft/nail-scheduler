@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.service;
 
-import fern.nail.art.nailscheduler.dto.user.UpdateAvgProcedureTimesDto;
+import fern.nail.art.nailscheduler.dto.user.UpdateProcedureTimesDto;
 import fern.nail.art.nailscheduler.dto.user.UserFullResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserRegistrationRequestDto;
 import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
@@ -19,8 +19,7 @@ public interface UserService {
 
     UserResponseDto update(Long userId, UserUpdateRequestDto userRequestDto);
 
-    void updatePassword(Long userId, UserUpdatePasswordDto userRequestDto);
+    void changePassword(Long userId, UserUpdatePasswordDto userRequestDto);
 
-    UserFullResponseDto updateAvgProcedureTimes(
-            Long id, UpdateAvgProcedureTimesDto updateRequestDto);
+    UserFullResponseDto updateProcedureTimes(Long id, UpdateProcedureTimesDto updateRequestDto);
 }

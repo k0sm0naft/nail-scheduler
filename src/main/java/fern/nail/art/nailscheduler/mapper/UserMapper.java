@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
-@Mapper(config = MapperConfig.class, uses = AvgProcedureTimesMapper.class)
+@Mapper(config = MapperConfig.class, uses = UserProcedureTimesMapper.class)
 public interface UserMapper {
     String UKR_LOCAL_NUMBER = "38";
     String PLUS = "+";

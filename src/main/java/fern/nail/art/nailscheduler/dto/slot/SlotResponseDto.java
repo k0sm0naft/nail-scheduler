@@ -2,18 +2,15 @@ package fern.nail.art.nailscheduler.dto.slot;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import lombok.Getter;
+import lombok.Setter;
 
-public record SlotResponseDto(
-        long id,
+@Getter
+@Setter
+public abstract class SlotResponseDto {
+    private long id;
 
-        LocalDate date,
+    private LocalDate date;
 
-        LocalTime startTime,
-
-        LocalTime endTime,
-
-        Boolean isAvailable,
-
-        Boolean isPublished
-) {
+    private LocalTime startTime;
 }

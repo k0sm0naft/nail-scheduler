@@ -12,9 +12,6 @@ public record SlotRequestDto(
         LocalTime startTime,
 
         @NotNull
-        LocalTime endTime,
-
-        @NotNull
         Boolean isPublished
 ) {
 }

@@ -1,14 +1,15 @@
 package fern.nail.art.nailscheduler.dto.appointment;
 
-import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
+import fern.nail.art.nailscheduler.dto.slot.PublicSlotResponseDto;
+import fern.nail.art.nailscheduler.dto.user.UserProcedureTimeDto;
 import java.time.LocalDateTime;
 
 public record AppointmentResponseDto(
         Long id,
 
-        SlotResponseDto slot,
+        PublicSlotResponseDto slot,
 
-        Long clientId,
+        UserProcedureTimeDto userProcedureTime,
 
         String notes,
 

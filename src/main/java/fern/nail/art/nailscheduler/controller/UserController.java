@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.controller;
 
-import fern.nail.art.nailscheduler.dto.user.UpdateAvgProcedureTimesDto;
+import fern.nail.art.nailscheduler.dto.user.UpdateProcedureTimesDto;
 import fern.nail.art.nailscheduler.dto.user.UserFullResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserResponseDto;
 import fern.nail.art.nailscheduler.dto.user.UserUpdatePasswordDto;
@@ -57,22 +57,22 @@ public class UserController {
         return userService.update(id, updateRequestDto);
     }
 
-    @PostMapping("/updateAvgProcedureTimes/{id}")
+    @PostMapping("/procedureTimes/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasRole('ROLE_MASTER')")
-    public UserFullResponseDto updateAvgProcedureTimes(
-            @RequestBody @Valid UpdateAvgProcedureTimesDto updateRequestDto,
+    public UserFullResponseDto updateProcedureTimes(
+            @RequestBody @Valid UpdateProcedureTimesDto updateRequestDto,
             @PathVariable Long id) {
-        return userService.updateAvgProcedureTimes(id, updateRequestDto);
+        return userService.updateProcedureTimes(id, updateRequestDto);
     }
 
-    @PostMapping("/updatePassword")
+    @PostMapping("/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updatePassword(
+    public void changePassword(
             @RequestBody @Valid UserUpdatePasswordDto updatePasswordDto,
             @AuthenticationPrincipal User user
     ) {
-        userService.updatePassword(user.getId(), updatePasswordDto);
+        userService.changePassword(user.getId(), updatePasswordDto);
     }
 }
 

@@ -2,9 +2,13 @@ package fern.nail.art.nailscheduler.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,7 +22,7 @@ import lombok.Setter;
 public class Slot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private LocalDate date;
@@ -26,12 +30,18 @@ public class Slot {
     @Column(nullable = false)
     private LocalTime startTime;
 
-    @Column(nullable = false)
-    private LocalTime endTime;
+    @OneToOne
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
 
     @Column(nullable = false)
-    private Boolean isAvailable;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
-    @Column(nullable = false)
-    private Boolean isPublished;
+    public enum Status {
+        UNPUBLISHED, //todo invisible for clients
+        PUBLISHED, //todo visible for clients
+        SHIFTED, //todo after confirming appointment that makeshift it changes on published again (visible for clients)
+        DELETED //todo after confirming appointment changes it's will be deleted (invisible for clients)
+    }
 }

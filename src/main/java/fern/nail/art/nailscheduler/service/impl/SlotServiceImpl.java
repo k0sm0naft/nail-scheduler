@@ -1,5 +1,9 @@
 package fern.nail.art.nailscheduler.service.impl;
 
+import static fern.nail.art.nailscheduler.model.Slot.Status.PUBLISHED;
+import static fern.nail.art.nailscheduler.model.Slot.Status.SHIFTED;
+import static fern.nail.art.nailscheduler.model.Slot.Status.UNPUBLISHED;
+
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
@@ -18,8 +22,9 @@ import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
 import jakarta.transaction.Transactional;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -31,46 +36,48 @@ public class SlotServiceImpl implements SlotService {
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final StrategyHandler strategyHandler;
+    @Value("${duration.min.procedure}")
+    private Integer minSlotTime;
 
     @Override
     @Transactional
     public SlotResponseDto create(SlotRequestDto slotRequestDto) {
-        validateTime(slotRequestDto, slot -> true);
         Slot slot = slotMapper.toModel(slotRequestDto);
-        slot.setIsAvailable(true);
+        validateTime(slot);
         slot = slotRepository.save(slot);
-        return slotMapper.toDto(slot);
+        return slotMapper.toMasterDto(slot);
     }
 
     @Override
     @Transactional
     public SlotResponseDto update(SlotRequestDto slotRequestDto, Long slotId) {
         validateExistence(slotId);
-        validateTime(slotRequestDto, slot -> slot.getId() != slotId);
         Slot slot = slotMapper.toModel(slotRequestDto);
-        Slot slotFromDb = slotRepository.getReferenceById(slotId);
         slot.setId(slotId);
-        slot.setIsAvailable(slotFromDb.getIsAvailable());
+        validateTime(slot);
+        slot.setStatus(slotRequestDto.isPublished() ? PUBLISHED : UNPUBLISHED);
         slot = slotRepository.save(slot);
-        return slotMapper.toDto(slot);
+        return slotMapper.toMasterDto(slot);
     }
 
     @Override
     public SlotResponseDto get(Long slotId, User user) {
-        Slot slot = slotRepository.findById(slotId)
-                                  .filter(s -> isAccessible(user, s))
-                                  .orElseThrow(
-                                          () -> new EntityNotFoundException(Slot.class, slotId));
-        return slotMapper.toDto(slot);
+        Slot slot = getSlot(slotId, user);
+        return getSlotResponseDto(user, slot);
     }
 
     @Override
-    public List<SlotResponseDto> getAllByPeriod(PeriodType periodType, int offset) {
+    public Slot get(User user, Long slotId) {
+        return getSlot(slotId, user);
+    }
+
+    @Override
+    public List<SlotResponseDto> getAllByPeriod(PeriodType periodType, int offset, User user) {
         PeriodStrategy strategy = strategyHandler.getPeriodStrategy(periodType);
         Range range = strategy.calculateRange(offset);
         List<Slot> slots = slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
         return slots.stream()
-                    .map(slotMapper::toDto)
+                    .map(slot -> getSlotResponseDto(user, slot))
                     .toList();
     }
 
@@ -88,19 +95,49 @@ public class SlotServiceImpl implements SlotService {
         }
     }
 
-    private void validateTime(SlotRequestDto slotRequestDto, Predicate<Slot> exclude) {
-        LocalTime start = slotRequestDto.startTime();
-        LocalTime end = slotRequestDto.endTime();
-        boolean isBusy = slotRepository.findAllByDate(slotRequestDto.date()).stream()
-                                       .filter(exclude)
-                                       .anyMatch(slot -> start.isBefore(slot.getEndTime())
-                                               && end.isAfter(slot.getStartTime()));
+    private void validateTime(Slot slot) {
+        LocalTime start = slot.getStartTime();
+        LocalTime end = start.plusMinutes(minSlotTime);
+        boolean isBusy = slotRepository.findAllByDate(slot.getDate()).stream()
+                                       .filter(s -> !Objects.equals(s.getId(), slot.getId()))
+                                       .anyMatch(s -> hasConflict(s, start, end));
         if (isBusy) {
-            throw new SlotConflictException(slotMapper.toModel(slotRequestDto));
+            throw new SlotConflictException(slot);
         }
     }
 
+    private boolean hasConflict(Slot s, LocalTime start, LocalTime end) {
+        return start.isBefore(getSlotEndTime(s))
+                && end.isAfter(s.getStartTime());
+    }
+
+    private LocalTime getSlotEndTime(Slot slot) {
+        Integer minutesToAdd;
+        if (slot.getAppointment() == null) {
+            minutesToAdd = minSlotTime;
+        } else {
+            minutesToAdd = slot.getAppointment().getUserProcedureTime().getDuration();
+        }
+        return slot.getStartTime().plusMinutes(minutesToAdd);
+    }
+
     private boolean isAccessible(User user, Slot slot) {
-        return slot.getIsPublished() || userService.isMaster(user);
+        return slot.getStatus().equals(PUBLISHED)
+                || slot.getStatus().equals(SHIFTED)
+                || userService.isMaster(user);
+    }
+
+    private Slot getSlot(Long slotId, User user) {
+        return slotRepository.findByIdWithAppointments(slotId)
+                             .filter(s -> isAccessible(user, s))
+                             .orElseThrow(
+                                     () -> new EntityNotFoundException(Slot.class, slotId));
+    }
+
+    private SlotResponseDto getSlotResponseDto(User user, Slot slot) {
+        if (userService.isMaster(user)) {
+            return slotMapper.toMasterDto(slot);
+        }
+        return slotMapper.toPublicDto(slot);
     }
 }
