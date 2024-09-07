@@ -71,7 +71,7 @@ public class SlotController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<SlotResponseDto> getByPeriod(
-            @RequestParam("periodType") PeriodType type,
+            @RequestParam("period") PeriodType type,
             @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
             @AuthenticationPrincipal User user
     ) {

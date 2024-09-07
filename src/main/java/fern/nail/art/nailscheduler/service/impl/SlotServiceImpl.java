@@ -56,11 +56,6 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public Slot get(User user, Long slotId) {
-        return getSlot(slotId, user);
-    }
-
-    @Override
     public List<Slot> getAllByPeriod(PeriodType periodType, int offset, User user) {
         PeriodStrategy strategy = strategyHandler.getPeriodStrategy(periodType);
         Range range = strategy.calculateRange(offset);

@@ -9,7 +9,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface SlotRepository extends JpaRepository<Slot, Long> {
-    @Query("FROM Slot s JOIN FETCH s.appointment a JOIN FETCH a.userProcedureTime WHERE s.id = :id")
+    @Query("FROM Slot s "
+            + "LEFT JOIN FETCH s.appointment a "
+            + "LEFT JOIN FETCH a.userProcedureTime "
+            + "WHERE s.id = :id")
     Optional<Slot> findByIdWithAppointments(Long id);
 
     @EntityGraph(attributePaths = "appointment.userProcedureTime")

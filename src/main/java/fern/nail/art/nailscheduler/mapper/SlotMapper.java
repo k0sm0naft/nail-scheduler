@@ -9,11 +9,17 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-@Mapper(config = MapperConfig.class, uses = AppointmentMapper.class)
+@Mapper(config = MapperConfig.class, uses = UserProcedureTimesMapper.class)
 public interface SlotMapper {
     @Mapping(target = "isAvailable", expression = "java(slot.getAppointment() == null)")
     PublicSlotResponseDto toPublicDto(Slot slot);
 
+    @Mapping(target = "procedureTime", source = "appointment.userProcedureTime")
+    @Mapping(target = "appointmentStatus", source = "appointment.status")
+    @Mapping(target = "slotStatus", source = "status")
+    @Mapping(target = "notes", source = "appointment.notes")
+    @Mapping(target = "appointmentCreatedAt", source = "appointment.createdAt")
+    @Mapping(target = "appointmentId", source = "appointment.id")
     MasterSlotResponseDto toMasterDto(Slot slot);
 
     @Mapping(target = "status", source = "isPublished", qualifiedByName = "setStatus")

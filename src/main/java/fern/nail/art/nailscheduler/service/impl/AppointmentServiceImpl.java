@@ -12,6 +12,7 @@ import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
+import fern.nail.art.nailscheduler.model.UserProcedureTime;
 import fern.nail.art.nailscheduler.repository.AppointmentRepository;
 import fern.nail.art.nailscheduler.service.AppointmentService;
 import fern.nail.art.nailscheduler.service.SlotService;
@@ -35,13 +36,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     @Override
     public Appointment create(Appointment appointment, ProcedureType procedure, User user) {
-        Slot slot = slotService.get(user, appointment.getSlot().getId());
+        Slot slot = slotService.get(appointment.getSlot().getId(), user);
         if (slot.getAppointment() != null) {
             throw new SlotAvailabilityException(slot);
         }
         slot.setAppointment(appointment);
         appointment.setSlot(slot);
-        appointment.setUserProcedureTime(procedureTimeService.get(procedure, user));
+        UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, user);
+        appointment.setUserProcedureTime(userProcedureTime);
         appointment.setStatus(Appointment.Status.PENDING);
         return appointmentRepository.save(appointment);
     }

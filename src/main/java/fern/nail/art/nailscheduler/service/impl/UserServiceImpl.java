@@ -41,6 +41,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean isMaster(User user) {
+        if (user == null) {
+            return false;
+        }
         return user.getRoles().stream()
                    .anyMatch(role -> role.getName() == Role.RoleName.ROLE_MASTER);
     }
@@ -82,7 +85,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private User getById(Long id) {
-        return userRepository.findById(id)
+        return userRepository.findByIdWithProcedureTimes(id)
                              .orElseThrow(() -> new EntityNotFoundException(User.class, id));
     }
 

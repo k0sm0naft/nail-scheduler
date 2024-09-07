@@ -12,8 +12,6 @@ public interface SlotService {
 
     Slot get(Long slotId, User user);
 
-    Slot get(User user, Long slotId);
-
     List<Slot> getAllByPeriod(PeriodType periodType, int offset, User user);
 
     void delete(Long slotId, User user);

@@ -1,15 +1,26 @@
 package fern.nail.art.nailscheduler.dto.slot;
 
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
+import fern.nail.art.nailscheduler.dto.user.ProcedureTimeDto;
+import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.Slot;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public final class MasterSlotResponseDto extends SlotResponseDto {
-    private AppointmentResponseDto appointment;
+    private ProcedureTimeDto procedureTime;
 
-    private Slot.Status status;
+    private Long appointmentId;
+
+    private Appointment.Status appointmentStatus;
+
+    private LocalDateTime appointmentCreatedAt;
+
+    private String notes;
+
+    private Slot.Status slotStatus;
+
 }
 

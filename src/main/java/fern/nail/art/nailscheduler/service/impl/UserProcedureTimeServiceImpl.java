@@ -10,6 +10,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +41,7 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
     }
 
     @Override
+    @Transactional
     public UserProcedureTime get(ProcedureType procedure, User user) {
         UserProcedureTime.Id id = new UserProcedureTime.Id(user.getId(), procedure);
         return procedureTimeRepository.getReferenceById(id);
