@@ -34,6 +34,7 @@ public class SlotServiceImpl implements SlotService {
     @Value("${duration.min.procedure}")
     private Integer minSlotTime;
 
+    // todo add scheduled method for cleaning empty slots from the past.
     @Override
     @Transactional
     public Slot create(Slot slot) {

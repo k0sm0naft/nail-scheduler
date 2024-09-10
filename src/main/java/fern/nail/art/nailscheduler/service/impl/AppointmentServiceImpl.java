@@ -51,6 +51,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public Appointment changeStatus(Long appointmentId, boolean isConfirmed, User user) {
+        // todo add event to check if confirmed appointmen between two filled slots,
+        //  and has enougth time for one more slot between them - notify master.
         Appointment appointment = getAppointment(appointmentId, user);
 
         Appointment.Status status = appointment.getStatus();
