@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,7 +19,7 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
                             .sorted(Slot::compareTo)
                             .collect(Collectors.groupingBy(Slot::getDate))
                             .values().parallelStream()
-                            .map(daySlots -> processDaySlots(daySlots, duration))
+                            .map(daySlots -> new SlotProcessor(daySlots, duration).process())
                             .flatMap(Collection::stream)
                             .filter(this::isWithinWorkingHours)
                             .toList();
@@ -29,93 +30,125 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
                 && slot.getStartTime().isBefore(LocalTime.of(19, 1));
     }
 
-    private List<Slot> processDaySlots(List<Slot> slots, int duration) {
-        List<Slot> modifiedSlots = new ArrayList<>();
-        Slot prevBookedSlot = null;
-        Slot nextBookedSlot = getNextBookedSlot(slots, 0);
+    @RequiredArgsConstructor
+    private class SlotProcessor {
+        private final List<Slot> slots;
+        private final int duration;
+        private final List<Slot> modifiedSlots = new ArrayList<>();
+        private int currentIndex;
+        private Slot prevBookedSlot;
+        private Slot nextBookedSlot;
 
-        for (int i = 0; i < slots.size(); i++) {
-            Slot currentSlot = slots.get(i);
+        private List<Slot> process() {
+            while (currentIndex < slots.size()) {
+                Slot currentSlot = slots.get(currentIndex);
+                nextBookedSlot = isBooked(currentSlot) ? currentSlot : getNextBookedSlot();
 
-            // Если нет следующего забронированного слота
-            if (nextBookedSlot == null) {
-                adjustSlotStartTime(slots, i);
-
-                LocalTime nextStartTime =
-                        (i + 1 < slots.size()) ? slots.get(i + 1).getStartTime() : null;
-
-                if (nextStartTime != null && !currentSlot.getStartTime().isBefore(nextStartTime)) {
-                    continue;
+                if (nextBookedSlot == null) {
+                    handleNoNextBookedSlot(currentSlot);
+                    break;
                 }
 
-                if (prevBookedSlot != null) {
-                    currentSlot.setStartTime(getEndTime(prevBookedSlot));
-                }
-
-                modifiedSlots.addAll(slots.subList(i, slots.size()));
-                break;
-            }
-
-            if (nextBookedSlot.equals(currentSlot)) {
-                modifiedSlots.add(currentSlot);
-                prevBookedSlot = currentSlot;
-                nextBookedSlot = getNextBookedSlot(slots, i + 1);
-            } else {
-                adjustSlotStartTime(slots, i);
-
-                if (prevBookedSlot != null && !isBooked(slots.get(i - 1))
-                        && getEndTime(prevBookedSlot).isAfter(currentSlot.getStartTime())) {
-                    continue;
-                }
-
-                LocalTime currentEndTime = currentSlot.getStartTime().plusMinutes(duration);
-
-                if (currentEndTime.isBefore(nextBookedSlot.getStartTime())) {
-                    modifiedSlots.add(currentSlot);
+                if (nextBookedSlot.equals(currentSlot)) {
+                    handleNextBookedSlot(currentSlot);
                 } else {
-                    LocalTime newStartTime = nextBookedSlot.getStartTime().minusMinutes(duration);
+                    handleRegularSlot(currentSlot);
+                }
 
-                    if (prevBookedSlot != null
-                            && newStartTime.isBefore(getEndTime(prevBookedSlot))) {
-                        i = slots.indexOf(nextBookedSlot) - 1;
-                    } else {
-                        currentSlot.setStartTime(newStartTime);
-                        modifiedSlots.add(currentSlot);
-                        i = slots.indexOf(nextBookedSlot) - 1;
-                    }
+                currentIndex++;
+            }
+
+            handleLastModifiedSlot();
+
+            return modifiedSlots;
+        }
+
+        private void handleNoNextBookedSlot(Slot currentSlot) {
+            adjustSlotStartTime();
+
+            boolean nextExist = currentIndex + 1 < slots.size();
+            LocalTime nextStartTime = nextExist ? slots.get(currentIndex + 1).getStartTime() : null;
+            if (nextExist && !currentSlot.getStartTime().isBefore(nextStartTime)) {
+                return;
+            }
+
+            modifiedSlots.addAll(slots.subList(currentIndex, slots.size()));
+        }
+
+        private void handleNextBookedSlot(Slot currentSlot) {
+            modifiedSlots.add(currentSlot);
+            prevBookedSlot = currentSlot;
+            nextBookedSlot = getNextBookedSlot();
+        }
+
+        private void handleRegularSlot(Slot currentSlot) {
+            adjustSlotStartTime();
+
+            boolean isPrevNotBooked =
+                    prevBookedSlot != null && !isBooked(slots.get(currentIndex - 1));
+            if (isPrevNotBooked && getEndTime(prevBookedSlot).isAfter(currentSlot.getStartTime())) {
+                return;
+            }
+
+            LocalTime currentEndTime = currentSlot.getStartTime().plusMinutes(duration);
+
+            if (currentEndTime.isBefore(nextBookedSlot.getStartTime())) {
+                modifiedSlots.add(currentSlot);
+            } else {
+                handleInterceptionWithBookedSlots(currentSlot);
+            }
+        }
+
+        private void handleInterceptionWithBookedSlots(Slot currentSlot) {
+            LocalTime newStartTime = nextBookedSlot.getStartTime().minusMinutes(duration);
+
+            if (prevBookedSlot != null && newStartTime.isBefore(getEndTime(prevBookedSlot))) {
+                currentIndex = slots.indexOf(nextBookedSlot) - 1;
+            } else {
+                currentSlot.setStartTime(newStartTime);
+                modifiedSlots.add(currentSlot);
+                currentIndex = slots.indexOf(nextBookedSlot) - 1;
+            }
+        }
+
+        private void handleLastModifiedSlot() {
+            if (currentIndex < slots.size()) {
+                Slot lastSlot = slots.get(currentIndex);
+                if (!modifiedSlots.contains(lastSlot)) {
+                    modifiedSlots.add(lastSlot);
                 }
             }
         }
 
-        return modifiedSlots;
-    }
+        private Slot getNextBookedSlot() {
+            for (int i = currentIndex + 1; i < slots.size(); i++) {
+                Slot slot = slots.get(i);
+                if (isBooked(slot)) {
+                    return slot;
+                }
+            }
+            return null;
+        }
 
-    private Slot getNextBookedSlot(List<Slot> slots, int startIndex) {
-        for (int i = startIndex; i < slots.size(); i++) {
-            Slot slot = slots.get(i);
-            if (isBooked(slot)) {
-                return slot;
+        private void adjustSlotStartTime() {
+            if (currentIndex > 0) {
+                Slot previousSlot = slots.get(currentIndex - 1);
+
+                if (isBooked(previousSlot)) {
+                    Slot currentSlot = slots.get(currentIndex);
+                    currentSlot.setStartTime(getEndTime(previousSlot));
+                }
             }
         }
-        return null;
-    }
 
-    private void adjustSlotStartTime(List<Slot> slots, int index) {
-        if (index > 0) {
-            Slot previousSlot = slots.get(index - 1);
-            Slot currentSlot = slots.get(index);
-            if (isBooked(previousSlot)) {
-                currentSlot.setStartTime(getEndTime(previousSlot));
-            }
+        private boolean isBooked(Slot slot) {
+            return slot != null && slot.getAppointment() != null;
         }
-    }
 
-    private boolean isBooked(Slot slot) {
-        return slot != null && slot.getAppointment() != null;
-    }
-
-    private LocalTime getEndTime(Slot slot) {
-        Appointment appointment = slot.getAppointment();
-        return slot.getStartTime().plusMinutes(appointment.getUserProcedureTime().getDuration());
+        private LocalTime getEndTime(Slot slot) {
+            Appointment appointment = slot.getAppointment();
+            return slot.getStartTime()
+                       .plusMinutes(appointment.getUserProcedureTime().getDuration());
+        }
     }
 }
