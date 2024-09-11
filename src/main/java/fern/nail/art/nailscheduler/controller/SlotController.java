@@ -5,6 +5,7 @@ import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
 import fern.nail.art.nailscheduler.mapper.SlotMapper;
 import fern.nail.art.nailscheduler.model.PeriodType;
+import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.service.SlotService;
@@ -70,12 +71,28 @@ public class SlotController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_MASTER')")
     public List<SlotResponseDto> getByPeriod(
             @RequestParam("period") PeriodType type,
             @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
             @AuthenticationPrincipal User user
     ) {
-        List<Slot> slots = slotService.getAllByPeriod(type, offset, user);
+        List<Slot> slots = slotService.getAllByPeriod(type, offset);
+        return slots.stream()
+                    .map(slot -> dtoFactory.createDto(slot, user))
+                    .toList();
+    }
+
+    @GetMapping("/{procedure}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<SlotResponseDto> getFilteredByPeriod(
+            @RequestParam("period") PeriodType type,
+            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
+            @AuthenticationPrincipal User user,
+            @PathVariable ProcedureType procedure
+    ) {
+        List<Slot> slots =
+                slotService.getFilteredByPeriodAndProcedure(type, offset, user, procedure);
         return slots.stream()
                     .map(slot -> dtoFactory.createDto(slot, user))
                     .toList();

@@ -6,12 +6,15 @@ import static fern.nail.art.nailscheduler.model.Slot.Status.SHIFTED;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotConflictException;
 import fern.nail.art.nailscheduler.model.PeriodType;
+import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.model.User;
+import fern.nail.art.nailscheduler.model.UserProcedureTime;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotService;
+import fern.nail.art.nailscheduler.service.SlotShiftingManager;
 import fern.nail.art.nailscheduler.service.StrategyHandler;
 import fern.nail.art.nailscheduler.service.UserService;
 import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
@@ -31,6 +34,11 @@ public class SlotServiceImpl implements SlotService {
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final StrategyHandler strategyHandler;
+    private final SlotShiftingManager slotShiftingManager;
+    @Value("${duration.avg.manicure}")
+    private Integer defaultManicureTime;
+    @Value("${duration.avg.pedicure}")
+    private Integer defaultPedicureTime;
     @Value("${duration.min.procedure}")
     private Integer minSlotTime;
 
@@ -57,10 +65,24 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public List<Slot> getAllByPeriod(PeriodType periodType, int offset, User user) {
-        PeriodStrategy strategy = strategyHandler.getPeriodStrategy(periodType);
+    public List<Slot> getAllByPeriod(PeriodType period, int offset) {
+        PeriodStrategy strategy = strategyHandler.getPeriodStrategy(period);
         Range range = strategy.calculateRange(offset);
         return slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
+    }
+
+    @Override
+    public List<Slot> getFilteredByPeriodAndProcedure(PeriodType period, int offset, User user,
+            ProcedureType procedure) {
+        List<Slot> slots = getAllByPeriod(period, offset);
+        int procedureDuration =
+                userService.getFullInfo(user.getId()).getProcedureTimes().stream()
+                           .filter(upt -> upt.getId().getProcedure().equals(procedure))
+                           .mapToInt(UserProcedureTime::getDuration)
+                           .findFirst()
+                           .orElseGet(() -> procedure.equals(ProcedureType.MANICURE)
+                                   ? defaultManicureTime : defaultPedicureTime);
+        return slotShiftingManager.getModifiedSlots(slots, procedureDuration);
     }
 
     @Override
@@ -112,7 +134,6 @@ public class SlotServiceImpl implements SlotService {
     private Slot getSlot(Long slotId, User user) {
         return slotRepository.findByIdWithAppointments(slotId)
                              .filter(s -> isAccessible(user, s))
-                             .orElseThrow(
-                                     () -> new EntityNotFoundException(Slot.class, slotId));
+                             .orElseThrow(() -> new EntityNotFoundException(Slot.class, slotId));
     }
 }
