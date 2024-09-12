@@ -2,7 +2,6 @@ package fern.nail.art.nailscheduler.controller;
 
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
 import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
-import fern.nail.art.nailscheduler.dto.appointment.StatusDto;
 import fern.nail.art.nailscheduler.mapper.AppointmentMapper;
 import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.User;
@@ -24,49 +23,37 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/appointments")
+@RequestMapping(value = "masters/appointments")
+@PreAuthorize("hasRole('ROLE_MASTER')")
 @RequiredArgsConstructor
-public class AppointmentController {
+public class MasterAppointmentController {
     private final AppointmentService appointmentService;
     private final AppointmentMapper appointmentMapper;
 
-    @PostMapping
+    @PostMapping("/users/{id}")
     @ResponseStatus(HttpStatus.CREATED)
     public AppointmentResponseDto create(
             @RequestBody @Valid AppointmentRequestDto requestDto,
-            @AuthenticationPrincipal User user) {
+            @PathVariable Long id) {
         Appointment appointment = appointmentMapper.toModel(requestDto);
-        appointment = appointmentService.create(appointment, requestDto.procedure(), user);
+        appointment = appointmentService.create(appointment, requestDto.procedure(), id);
         return appointmentMapper.toDto(appointment);
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PreAuthorize("!#statusDto.isConfirmed() || hasRole('ROLE_MASTER')")
-    public AppointmentResponseDto changeStatus(
-            @PathVariable Long id,
-            @RequestBody @Valid StatusDto statusDto,
-            @AuthenticationPrincipal User user
-    ) {
-        Appointment appointment =
-                appointmentService.changeStatus(id, statusDto.isConfirmed(), user);
-        return appointmentMapper.toDto(appointment);
-    }
-
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public AppointmentResponseDto get(
+    public AppointmentResponseDto accept(
             @PathVariable Long id,
             @AuthenticationPrincipal User user
     ) {
-        Appointment appointment = appointmentService.get(id, user);
+        Appointment appointment = appointmentService.changeStatus(id, true, user);
         return appointmentMapper.toDto(appointment);
     }
 
-    @GetMapping
+    @GetMapping("users/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public List<AppointmentResponseDto> getAll(@AuthenticationPrincipal User user) {
-        List<Appointment> appointments = appointmentService.getAll(user);
+    public List<AppointmentResponseDto> getAll(@PathVariable(name = "id") Long userId) {
+        List<Appointment> appointments = appointmentService.getAll(userId);
         return appointments.stream()
                            .map(appointmentMapper::toDto)
                            .toList();
@@ -74,7 +61,6 @@ public class AppointmentController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ROLE_MASTER')")
     public void delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
         appointmentService.delete(id, user);
     }

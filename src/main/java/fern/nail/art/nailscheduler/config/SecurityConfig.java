@@ -43,8 +43,6 @@ public class SecurityConfig {
                         auth -> auth
                                 .requestMatchers(
                                         "/auth/**",
-                                        "/slots",
-                                        "/slots/{id}",
                                         "/error"
                                 )
                                 .permitAll()

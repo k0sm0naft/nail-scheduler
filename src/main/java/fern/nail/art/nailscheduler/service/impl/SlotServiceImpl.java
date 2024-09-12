@@ -60,8 +60,15 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public Slot get(Long slotId, User user) {
-        return getSlot(slotId, user);
+    public Slot getModified(Long slotId, Long userId, ProcedureType procedure) {
+        List<Slot> slotsByDay = slotRepository.findAllOnSameDayAsSlotId(slotId);
+        int procedureDuration = getProcedureDuration(userId, procedure);
+        List<Slot> modifiedSlots =
+                slotShiftingManager.getModifiedSlots(slotsByDay, procedureDuration);
+        return modifiedSlots.stream()
+                .filter(slot -> slot.getId().equals(slotId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(Slot.class, slotId));
     }
 
     @Override
@@ -72,17 +79,20 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public List<Slot> getFilteredByPeriodAndProcedure(PeriodType period, int offset, User user,
+    public List<Slot> getModifiedByPeriodAndProcedure(PeriodType period, int offset, Long userId,
             ProcedureType procedure) {
         List<Slot> slots = getAllByPeriod(period, offset);
-        int procedureDuration =
-                userService.getFullInfo(user.getId()).getProcedureTimes().stream()
-                           .filter(upt -> upt.getId().getProcedure().equals(procedure))
-                           .mapToInt(UserProcedureTime::getDuration)
-                           .findFirst()
-                           .orElseGet(() -> procedure.equals(ProcedureType.MANICURE)
-                                   ? defaultManicureTime : defaultPedicureTime);
+        int procedureDuration = getProcedureDuration(userId, procedure);
         return slotShiftingManager.getModifiedSlots(slots, procedureDuration);
+    }
+
+    private int getProcedureDuration(Long userId, ProcedureType procedure) {
+        return userService.getFullInfo(userId).getProcedureTimes().stream()
+                          .filter(upt -> upt.getId().getProcedure().equals(procedure))
+                          .mapToInt(UserProcedureTime::getDuration)
+                          .findFirst()
+                          .orElseGet(() -> procedure.equals(ProcedureType.MANICURE)
+                                  ? defaultManicureTime : defaultPedicureTime);
     }
 
     @Override

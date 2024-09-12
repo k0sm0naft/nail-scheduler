@@ -11,5 +11,5 @@ public interface UserProcedureTimeService {
 
     void setToUser(Set<ProcedureTimeDto> procedureTimes, User user);
 
-    UserProcedureTime get(ProcedureType procedure, User user);
+    UserProcedureTime get(ProcedureType procedure, Long userId);
 }

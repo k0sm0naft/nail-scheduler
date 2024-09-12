@@ -13,9 +13,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @EntityGraph(attributePaths = {"slot", "userProcedureTime"})
     Optional<Appointment> findById(Long id);
 
-    @EntityGraph(attributePaths = {"slot", "userProcedureTime"})
-    List<Appointment> findAll();
-
     @Query("FROM Appointment a JOIN FETCH a.slot JOIN FETCH a.userProcedureTime u "
             + "WHERE u.user.id = :userId")
     List<Appointment> findAllByClientIdWithSlot(Long userId);

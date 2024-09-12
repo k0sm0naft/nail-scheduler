@@ -35,14 +35,14 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Transactional
     @Override
-    public Appointment create(Appointment appointment, ProcedureType procedure, User user) {
-        Slot slot = slotService.get(appointment.getSlot().getId(), user);
+    public Appointment create(Appointment appointment, ProcedureType procedure, Long userId) {
+        Slot slot = slotService.getModified(appointment.getSlot().getId(), userId, procedure);
         if (slot.getAppointment() != null) {
             throw new SlotAvailabilityException(slot);
         }
         slot.setAppointment(appointment);
         appointment.setSlot(slot);
-        UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, user);
+        UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, userId);
         appointment.setUserProcedureTime(userProcedureTime);
         appointment.setStatus(Appointment.Status.PENDING);
         return appointmentRepository.save(appointment);
@@ -76,13 +76,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<Appointment> getAll(User user) {
-        List<Appointment> appointments;
-        if (userService.isMaster(user)) {
-            appointments = appointmentRepository.findAll();
-        } else {
-            appointments = appointmentRepository.findAllByClientIdWithSlot(user.getId());
-        }
+    public List<Appointment> getAll(Long userId) {
+        List<Appointment> appointments =
+                appointmentRepository.findAllByClientIdWithSlot(userId);
         return appointments;
     }
 

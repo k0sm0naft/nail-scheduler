@@ -20,4 +20,7 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
 
     @EntityGraph(attributePaths = "appointment.userProcedureTime")
     List<Slot> findAllByDateBetween(LocalDate startDate, LocalDate endDate);
+
+    @Query("FROM Slot s WHERE s.date = (SELECT s2.date FROM Slot s2 WHERE s2.id = :id)")
+    List<Slot> findAllOnSameDayAsSlotId(Long id);
 }

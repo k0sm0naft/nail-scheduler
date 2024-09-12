@@ -11,11 +11,11 @@ public interface SlotService {
 
     Slot update(Slot slot, Long slotId);
 
-    Slot get(Long slotId, User user);
+    Slot getModified(Long slotId, Long userId, ProcedureType procedure);
 
     List<Slot> getAllByPeriod(PeriodType periodType, int offset);
 
-    List<Slot> getFilteredByPeriodAndProcedure(PeriodType period, int offset, User user,
+    List<Slot> getModifiedByPeriodAndProcedure(PeriodType period, int offset, Long userId,
             ProcedureType procedure);
 
     void delete(Long slotId, User user);

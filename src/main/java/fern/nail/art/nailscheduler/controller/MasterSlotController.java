@@ -1,5 +1,6 @@
 package fern.nail.art.nailscheduler.controller;
 
+import fern.nail.art.nailscheduler.dto.slot.MasterSlotResponseDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotDtoFactory;
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
@@ -27,16 +28,16 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/slots")
+@RequestMapping(value = "/masters/slots")
+@PreAuthorize("hasRole('ROLE_MASTER')")
 @RequiredArgsConstructor
-public class SlotController {
+public class MasterSlotController {
     private final SlotService slotService;
     private final SlotMapper slotMapper;
     private final SlotDtoFactory dtoFactory;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ROLE_MASTER')")
     public SlotResponseDto create(
             @RequestBody @Valid SlotRequestDto slotRequestDto,
             @AuthenticationPrincipal User user
@@ -48,7 +49,6 @@ public class SlotController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PreAuthorize("hasRole('ROLE_MASTER')")
     public SlotResponseDto update(
             @RequestBody @Valid SlotRequestDto slotRequestDto,
             @PathVariable Long id,
@@ -59,40 +59,29 @@ public class SlotController {
         return dtoFactory.createDto(slot, user);
     }
 
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public SlotResponseDto get(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user
-    ) {
-        Slot slot = slotService.get(id, user);
-        return dtoFactory.createDto(slot, user);
-    }
-
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('ROLE_MASTER')")
-    public List<SlotResponseDto> getByPeriod(
-            @RequestParam("period") PeriodType type,
-            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
-            @AuthenticationPrincipal User user
+    public List<MasterSlotResponseDto> getByPeriod(
+            @RequestParam PeriodType period,
+            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset
     ) {
-        List<Slot> slots = slotService.getAllByPeriod(type, offset);
+        List<Slot> slots = slotService.getAllByPeriod(period, offset);
         return slots.stream()
-                    .map(slot -> dtoFactory.createDto(slot, user))
+                    .map(slotMapper::toMasterDto)
                     .toList();
     }
 
-    @GetMapping("/{procedure}")
+    @GetMapping("/users/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public List<SlotResponseDto> getFilteredByPeriod(
-            @RequestParam("period") PeriodType type,
+    public List<SlotResponseDto> getForUserByPeriod(
+            @PathVariable Long id,
+            @RequestParam("period") PeriodType period,
+            @RequestParam("procedure") ProcedureType procedure,
             @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
-            @AuthenticationPrincipal User user,
-            @PathVariable ProcedureType procedure
+            @AuthenticationPrincipal User user
     ) {
         List<Slot> slots =
-                slotService.getFilteredByPeriodAndProcedure(type, offset, user, procedure);
+                slotService.getModifiedByPeriodAndProcedure(period, offset, id, procedure);
         return slots.stream()
                     .map(slot -> dtoFactory.createDto(slot, user))
                     .toList();
@@ -100,7 +89,6 @@ public class SlotController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ROLE_MASTER')")
     public void delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
         slotService.delete(id, user);
     }
