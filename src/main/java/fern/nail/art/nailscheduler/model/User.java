@@ -1,5 +1,6 @@
 package fern.nail.art.nailscheduler.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,10 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -46,8 +50,12 @@ public class User implements UserDetails {
 
     private String viberId;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserProcedureTime> procedureTimes = new HashSet<>();
+
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
+    @Setter(AccessLevel.NONE)
     private LocalDateTime registeredAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -57,29 +65,6 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
-
-    @Column(nullable = false)
-    private boolean isDeleted;
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return !isDeleted;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

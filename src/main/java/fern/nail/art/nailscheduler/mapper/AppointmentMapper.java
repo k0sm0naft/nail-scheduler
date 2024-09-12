@@ -9,8 +9,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-@Mapper(config = MapperConfig.class, uses = {SlotMapper.class})
+@Mapper(config = MapperConfig.class, uses = UserProcedureTimesMapper.class)
 public interface AppointmentMapper {
+    @Mapping(target = "slotId", source = "slot.id")
+    @Mapping(target = "date", source = "slot.date")
+    @Mapping(target = "startTime", source = "slot.startTime")
+    @Mapping(target = "procedureTime", source = "userProcedureTime")
     AppointmentResponseDto toDto(Appointment appointment);
 
     @Mapping(source = "slotId", target = "slot", qualifiedByName = "slotById")

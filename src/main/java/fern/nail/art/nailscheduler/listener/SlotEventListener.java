@@ -15,7 +15,8 @@ public class SlotEventListener {
 
     @EventListener
     public void handleSlotDeletedEvent(SlotDeletedEvent event) {
+        //todo change on "delete all appointments where slotId..."
         appointmentRepository.findAllBySlotId(event.slotId())
-                .forEach(appointmentService::delete);
+                             .forEach(appointmentService::delete);
     }
 }

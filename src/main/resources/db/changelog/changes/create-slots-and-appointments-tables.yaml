@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-slots-and-appointments-tables
+      author: Artem_Akymenko
+      changes:
+        - createTable:
+            tableName: slots
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: time
+                  constraints:
+                    nullable: false
+              - column:
+                  name: appointment_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: appointments
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: slot_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_appointment_user
+                    references: users(id)
+                    nullable: false
+              - column:
+                  name: procedure
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: varchar(400)
+              - column:
+                  name: status
+                  type: varchar
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: appointments
+            baseColumnNames: slot_id
+            constraintName: fk_appointments_slots
+            referencedTableName: slots
+            referencedColumnNames: id
+
+        - addForeignKeyConstraint:
+            baseTableName: slots
+            baseColumnNames: appointment_id
+            constraintName: fk_slots_appointments
+            referencedTableName: appointments
+            referencedColumnNames: id

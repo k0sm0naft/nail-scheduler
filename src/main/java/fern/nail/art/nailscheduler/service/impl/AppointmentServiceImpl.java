@@ -2,18 +2,21 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import static fern.nail.art.nailscheduler.model.Appointment.Status.CANCELED;
 import static fern.nail.art.nailscheduler.model.Appointment.Status.CONFIRMED;
+import static fern.nail.art.nailscheduler.model.Slot.Status.DELETED;
+import static fern.nail.art.nailscheduler.model.Slot.Status.UNPUBLISHED;
 
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentRequestDto;
-import fern.nail.art.nailscheduler.dto.appointment.AppointmentResponseDto;
 import fern.nail.art.nailscheduler.exception.AppointmentStatusException;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
-import fern.nail.art.nailscheduler.mapper.AppointmentMapper;
+import fern.nail.art.nailscheduler.exception.SlotAvailabilityException;
 import fern.nail.art.nailscheduler.model.Appointment;
+import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
+import fern.nail.art.nailscheduler.model.UserProcedureTime;
 import fern.nail.art.nailscheduler.repository.AppointmentRepository;
 import fern.nail.art.nailscheduler.service.AppointmentService;
-import fern.nail.art.nailscheduler.service.SlotAvailabilityService;
+import fern.nail.art.nailscheduler.service.SlotService;
+import fern.nail.art.nailscheduler.service.UserProcedureTimeService;
 import fern.nail.art.nailscheduler.service.UserService;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -27,26 +30,29 @@ import org.springframework.stereotype.Service;
 public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final UserService userService;
-    private final AppointmentMapper appointmentMapper;
-    private final SlotAvailabilityService slotAvailabilityService;
+    private final SlotService slotService;
+    private final UserProcedureTimeService procedureTimeService;
 
-    @Override
     @Transactional
-    public AppointmentResponseDto create(AppointmentRequestDto requestDto, User user) {
-        Appointment appointment = appointmentMapper.toModel(requestDto);
-        Slot slot = slotAvailabilityService
-                .changeSlotAvailability(appointment.getSlot().getId(), false);
-        validateAccess(slot.getIsPublished(), user);
+    @Override
+    public Appointment create(Appointment appointment, ProcedureType procedure, Long userId) {
+        Slot slot = slotService.getModified(appointment.getSlot().getId(), userId, procedure);
+        if (slot.getAppointment() != null) {
+            throw new SlotAvailabilityException(slot);
+        }
+        slot.setAppointment(appointment);
         appointment.setSlot(slot);
-        appointment.setClientId(user.getId());
+        UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, userId);
+        appointment.setUserProcedureTime(userProcedureTime);
         appointment.setStatus(Appointment.Status.PENDING);
-        appointment = appointmentRepository.save(appointment);
-        return appointmentMapper.toDto(appointment);
+        return appointmentRepository.save(appointment);
     }
 
     @Override
     @Transactional
-    public AppointmentResponseDto changeStatus(Long appointmentId, boolean isConfirmed, User user) {
+    public Appointment changeStatus(Long appointmentId, boolean isConfirmed, User user) {
+        // todo add event to check if confirmed appointmen between two filled slots,
+        //  and has enougth time for one more slot between them - notify master.
         Appointment appointment = getAppointment(appointmentId, user);
 
         Appointment.Status status = appointment.getStatus();
@@ -54,28 +60,26 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new AppointmentStatusException(status);
         }
 
-        appointment.setStatus(isConfirmed ? CONFIRMED : CANCELED);
-        slotAvailabilityService.changeSlotAvailability(appointment.getSlot().getId(), !isConfirmed);
-        appointment = appointmentRepository.save(appointment);
-        return appointmentMapper.toDto(appointment);
-    }
-
-    @Override
-    public AppointmentResponseDto get(Long appointmentId, User user) {
-        return appointmentMapper.toDto(getAppointment(appointmentId, user));
-    }
-
-    @Override
-    public List<AppointmentResponseDto> getAll(User user) {
-        List<Appointment> appointments;
-        if (userService.isMaster(user)) {
-            appointments = appointmentRepository.findAllWithSlots();
+        if (isConfirmed) {
+            appointment.setStatus(CONFIRMED);
         } else {
-            appointments = appointmentRepository.findAllByClientIdWithSlot(user.getId());
+            appointment.setStatus(CANCELED);
+            appointment.getSlot().setAppointment(null);
         }
-        return appointments.stream()
-                           .map(appointmentMapper::toDto)
-                           .toList();
+
+        return appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public Appointment get(Long appointmentId, User user) {
+        return getAppointment(appointmentId, user);
+    }
+
+    @Override
+    public List<Appointment> getAll(Long userId) {
+        List<Appointment> appointments =
+                appointmentRepository.findAllByClientIdWithSlot(userId);
+        return appointments;
     }
 
     @Override
@@ -89,25 +93,30 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public void delete(Appointment appointment) {
         Slot slot = appointment.getSlot();
-        LocalDateTime slotEndTime = LocalDateTime.of(slot.getDate(), slot.getEndTime());
+        LocalDateTime slotStart = LocalDateTime.of(slot.getDate(), slot.getStartTime());
 
-        if (appointment.getStatus() != CANCELED && slotEndTime.isBefore(LocalDateTime.now())) {
+        if (appointment.getStatus() != CANCELED && slotStart.isBefore(LocalDateTime.now())) {
             throw new AppointmentStatusException(appointment.getStatus());
         }
 
         appointmentRepository.deleteById(appointment.getId());
     }
 
-    private void validateAccess(Boolean isPublished, User user) {
-        if (!isPublished && !userService.isMaster(user)) {
+    private void validateAccess(Slot.Status status, User user) {
+        if ((status.equals(UNPUBLISHED) || status.equals(DELETED)) && !userService.isMaster(user)) {
             throw new AccessDeniedException("Access denied. User ID: %s.".formatted(user.getId()));
         }
     }
 
     private Appointment getAppointment(Long appointmentId, User user) {
         return appointmentRepository
-                .findByIdWithSlots(appointmentId)
-                .filter(a -> a.getClientId() == user.getId() || userService.isMaster(user))
+                .findById(appointmentId)
+                .filter(appointment -> hasAccess(user, appointment))
                 .orElseThrow(() -> new EntityNotFoundException(Appointment.class, appointmentId));
+    }
+
+    private boolean hasAccess(User user, Appointment appointment) {
+        return appointment.getUserProcedureTime().getUser().getId().equals(user.getId())
+                || userService.isMaster(user);
     }
 }

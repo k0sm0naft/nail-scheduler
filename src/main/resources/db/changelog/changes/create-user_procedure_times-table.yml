@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-user_procedure_times-table.yml
+      author: Artem_Akymenko
+      changes:
+        - createTable:
+            tableName: user_procedure_times
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_times_id
+                    references: users(id)
+              - column:
+                  name: procedure_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: average_time
+                  type: int
+                  constraints:
+                    nullable: false

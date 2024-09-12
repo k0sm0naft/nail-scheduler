@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-user_procedure_times-table.yaml
+      author: Artem_Akymenko
+      changes:
+        - createTable:
+            tableName: user_procedure_times
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: fk_user-procedure-time_user
+                    references: users(id)
+                    nullable: false
+              - column:
+                  name: procedure
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration
+                  type: int
+                  constraints:
+                    nullable: false
+            primaryKey:
+              columnNames: user_id, procedure
+              constraintName: pk_user_procedure_times
+        - addUniqueConstraint:
+            columnNames: user_id, procedure
+            constraintName: uq_user_procedure_times
+            tableName: user_procedure_times
