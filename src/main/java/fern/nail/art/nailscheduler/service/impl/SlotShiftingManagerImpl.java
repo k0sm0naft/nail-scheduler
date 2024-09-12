@@ -3,6 +3,7 @@ package fern.nail.art.nailscheduler.service.impl;
 import fern.nail.art.nailscheduler.model.Appointment;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.service.SlotShiftingManager;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,13 +20,23 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
                             .sorted(Slot::compareTo)
                             .collect(Collectors.groupingBy(Slot::getDate))
                             .values().parallelStream()
-                            .map(daySlots -> new SlotProcessor(daySlots, duration).process())
+                            .map(daySlots -> getProcessedSlots(duration, daySlots))
                             .flatMap(Collection::stream)
-                            .filter(this::isWithinWorkingHours)
                             .toList();
     }
 
+    private List<Slot> getProcessedSlots(int duration, List<Slot> slots) {
+        boolean isDayFromPast = slots.getFirst().getDate().isBefore(LocalDate.now());
+        if (isDayFromPast) {
+            return slots;
+        }
+        return new SlotProcessor(slots, duration).process().stream()
+                                                 .filter(this::isWithinWorkingHours)
+                                                 .toList();
+    }
+
     private boolean isWithinWorkingHours(Slot slot) {
+        //todo make working hours variables and set them from properties
         return slot.getStartTime().isAfter(LocalTime.of(6, 59))
                 && slot.getStartTime().isBefore(LocalTime.of(19, 1));
     }

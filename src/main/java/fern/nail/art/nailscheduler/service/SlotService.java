@@ -4,6 +4,7 @@ import fern.nail.art.nailscheduler.model.PeriodType;
 import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface SlotService {
@@ -19,4 +20,6 @@ public interface SlotService {
             ProcedureType procedure);
 
     void delete(Long slotId, User user);
+
+    void deleteEmptyBefore(LocalDate date);
 }

@@ -11,14 +11,15 @@ import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.model.User;
-import fern.nail.art.nailscheduler.model.UserProcedureTime;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotService;
 import fern.nail.art.nailscheduler.service.SlotShiftingManager;
 import fern.nail.art.nailscheduler.service.StrategyHandler;
+import fern.nail.art.nailscheduler.service.UserProcedureTimeService;
 import fern.nail.art.nailscheduler.service.UserService;
 import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
 import jakarta.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
@@ -35,14 +36,10 @@ public class SlotServiceImpl implements SlotService {
     private final ApplicationEventPublisher eventPublisher;
     private final StrategyHandler strategyHandler;
     private final SlotShiftingManager slotShiftingManager;
-    @Value("${duration.avg.manicure}")
-    private Integer defaultManicureTime;
-    @Value("${duration.avg.pedicure}")
-    private Integer defaultPedicureTime;
+    private final UserProcedureTimeService procedureTimeService;
     @Value("${duration.min.procedure}")
     private Integer minSlotTime;
 
-    // todo add scheduled method for cleaning empty slots from the past.
     @Override
     @Transactional
     public Slot create(Slot slot) {
@@ -62,7 +59,7 @@ public class SlotServiceImpl implements SlotService {
     @Override
     public Slot getModified(Long slotId, Long userId, ProcedureType procedure) {
         List<Slot> slotsByDay = slotRepository.findAllOnSameDayAsSlotId(slotId);
-        int procedureDuration = getProcedureDuration(userId, procedure);
+        int procedureDuration = procedureTimeService.get(procedure, userId).getDuration();
         List<Slot> modifiedSlots =
                 slotShiftingManager.getModifiedSlots(slotsByDay, procedureDuration);
         return modifiedSlots.stream()
@@ -82,17 +79,8 @@ public class SlotServiceImpl implements SlotService {
     public List<Slot> getModifiedByPeriodAndProcedure(PeriodType period, int offset, Long userId,
             ProcedureType procedure) {
         List<Slot> slots = getAllByPeriod(period, offset);
-        int procedureDuration = getProcedureDuration(userId, procedure);
+        int procedureDuration = procedureTimeService.get(procedure, userId).getDuration();
         return slotShiftingManager.getModifiedSlots(slots, procedureDuration);
-    }
-
-    private int getProcedureDuration(Long userId, ProcedureType procedure) {
-        return userService.getFullInfo(userId).getProcedureTimes().stream()
-                          .filter(upt -> upt.getId().getProcedure().equals(procedure))
-                          .mapToInt(UserProcedureTime::getDuration)
-                          .findFirst()
-                          .orElseGet(() -> procedure.equals(ProcedureType.MANICURE)
-                                  ? defaultManicureTime : defaultPedicureTime);
     }
 
     @Override
@@ -101,6 +89,12 @@ public class SlotServiceImpl implements SlotService {
         validateExistence(slotId);
         eventPublisher.publishEvent(new SlotDeletedEvent(slotId, user));
         slotRepository.deleteById(slotId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteEmptyBefore(LocalDate date) {
+        slotRepository.deleteEmptyByDateBefore(date);
     }
 
     private void validateExistence(Long slotId) {

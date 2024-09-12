@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface SlotRepository extends JpaRepository<Slot, Long> {
@@ -23,4 +24,8 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
 
     @Query("FROM Slot s WHERE s.date = (SELECT s2.date FROM Slot s2 WHERE s2.id = :id)")
     List<Slot> findAllOnSameDayAsSlotId(Long id);
+
+    @Modifying
+    @Query("DELETE FROM Slot s WHERE s.date < :date AND s.appointment IS NULL")
+    void deleteEmptyByDateBefore(LocalDate date);
 }
