@@ -13,6 +13,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -44,6 +45,7 @@ public class UserProcedureTime {
     @Embeddable
     @NoArgsConstructor
     @AllArgsConstructor
+    @EqualsAndHashCode
     public static class Id implements Serializable {
         private Long userId;
 

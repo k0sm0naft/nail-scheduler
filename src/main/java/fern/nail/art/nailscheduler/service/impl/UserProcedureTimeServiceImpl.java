@@ -1,6 +1,7 @@
 package fern.nail.art.nailscheduler.service.impl;
 
 import fern.nail.art.nailscheduler.dto.user.ProcedureTimeDto;
+import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.model.UserProcedureTime;
@@ -42,6 +43,7 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
     @Override
     public UserProcedureTime get(ProcedureType procedure, Long userId) {
         UserProcedureTime.Id id = new UserProcedureTime.Id(userId, procedure);
-        return procedureTimeRepository.getReferenceById(id);
+        return procedureTimeRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException(UserProcedureTime.class, id));
     }
 }

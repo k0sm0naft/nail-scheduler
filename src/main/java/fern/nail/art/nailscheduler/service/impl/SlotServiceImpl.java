@@ -2,13 +2,13 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import static fern.nail.art.nailscheduler.model.Slot.Status.PUBLISHED;
 
+import fern.nail.art.nailscheduler.event.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotConflictException;
 import fern.nail.art.nailscheduler.model.PeriodType;
 import fern.nail.art.nailscheduler.model.ProcedureType;
 import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
-import fern.nail.art.nailscheduler.model.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
 import fern.nail.art.nailscheduler.service.SlotService;
@@ -116,6 +116,11 @@ public class SlotServiceImpl implements SlotService {
     @Transactional
     public void deleteEmptyBefore(LocalDate date) {
         slotRepository.deleteEmptyByDateBefore(date);
+    }
+
+    @Override
+    public void deleteAllByDate(LocalDate date) {
+        slotRepository.deleteAllByDate(date);
     }
 
     private void validateExistence(Long slotId) {

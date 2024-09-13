@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.listener;
 
-import fern.nail.art.nailscheduler.model.SlotDeletedEvent;
+import fern.nail.art.nailscheduler.event.SlotDeletedEvent;
 import fern.nail.art.nailscheduler.repository.AppointmentRepository;
 import fern.nail.art.nailscheduler.service.AppointmentService;
 import lombok.RequiredArgsConstructor;

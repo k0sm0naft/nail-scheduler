@@ -4,6 +4,7 @@ import static fern.nail.art.nailscheduler.model.Appointment.Status.CANCELED;
 import static fern.nail.art.nailscheduler.model.Appointment.Status.CONFIRMED;
 import static fern.nail.art.nailscheduler.model.Slot.Status.UNPUBLISHED;
 
+import fern.nail.art.nailscheduler.event.AppointmentCreatedEvent;
 import fern.nail.art.nailscheduler.exception.AppointmentStatusException;
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotAvailabilityException;
@@ -21,6 +22,7 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -31,27 +33,33 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserService userService;
     private final SlotService slotService;
     private final UserProcedureTimeService procedureTimeService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
     @Override
+    @Transactional
     public Appointment create(Appointment appointment, ProcedureType procedure, Long userId) {
         Slot slot = slotService.getModified(appointment.getSlot().getId(), userId, procedure);
+
         if (slot.getAppointment() != null) {
             throw new SlotAvailabilityException(slot);
         }
-        slot.setAppointment(appointment);
-        appointment.setSlot(slot);
+
         UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, userId);
         appointment.setUserProcedureTime(userProcedureTime);
         appointment.setStatus(Appointment.Status.PENDING);
-        return appointmentRepository.save(appointment);
+        appointment.setSlot(slot);
+        appointment = appointmentRepository.save(appointment);
+
+        slot.setAppointment(appointment);
+        slotService.update(slot, slot.getId());
+
+        eventPublisher.publishEvent(new AppointmentCreatedEvent(appointment));
+        return appointment;
     }
 
     @Override
     @Transactional
     public Appointment changeStatus(Long appointmentId, boolean isConfirmed, User user) {
-        // todo add event to check if confirmed appointmen between two filled slots,
-        //  and has enougth time for one more slot between them - notify master.
         Appointment appointment = getAppointment(appointmentId, user);
 
         Appointment.Status status = appointment.getStatus();

@@ -24,4 +24,6 @@ public interface SlotService {
     void delete(Long slotId, User user);
 
     void deleteEmptyBefore(LocalDate date);
+
+    void deleteAllByDate(LocalDate date);
 }

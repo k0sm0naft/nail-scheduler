@@ -28,4 +28,6 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
     @Modifying
     @Query("DELETE FROM Slot s WHERE s.date < :date AND s.appointment IS NULL")
     void deleteEmptyByDateBefore(LocalDate date);
+
+    void deleteAllByDate(LocalDate date);
 }
