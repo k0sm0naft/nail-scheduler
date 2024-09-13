@@ -15,13 +15,11 @@ public class MonthStrategy extends PeriodStrategy {
 
     @Override
     public Range calculateRange(int offset) {
-        LocalDate thisMoth = LocalDate.now();
+        LocalDate dayOfMonth = LocalDate.now().plusMonths(offset);
 
-        LocalDate startOfMonth =
-                thisMoth.plusMonths(offset).with(TemporalAdjusters.firstDayOfMonth());
+        LocalDate startOfMonth = dayOfMonth.with(TemporalAdjusters.firstDayOfMonth());
 
-        LocalDate endOfMonth = thisMoth.plusMonths(offset)
-                                       .with(TemporalAdjusters.lastDayOfMonth());
+        LocalDate endOfMonth = dayOfMonth.with(TemporalAdjusters.lastDayOfMonth());
 
         return new Range(startOfMonth, endOfMonth);
     }

@@ -37,6 +37,7 @@ public class ClientSlotController {
         List<Slot> slots =
                 slotService.getModifiedByPeriodAndProcedure(type, offset, user.getId(), procedure);
         return slots.stream()
+                    .filter(slot -> slot.getStatus().equals(Slot.Status.PUBLISHED))
                     .map(slot -> dtoFactory.createDto(slot, user))
                     .toList();
     }

@@ -10,6 +10,8 @@ import java.util.List;
 public interface SlotService {
     Slot create(Slot slot);
 
+    void generateSlotsForDay(LocalDate date);
+
     Slot update(Slot slot, Long slotId);
 
     Slot getModified(Long slotId, Long userId, ProcedureType procedure);

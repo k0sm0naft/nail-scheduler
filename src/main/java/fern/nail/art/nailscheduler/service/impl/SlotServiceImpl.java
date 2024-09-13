@@ -1,7 +1,6 @@
 package fern.nail.art.nailscheduler.service.impl;
 
 import static fern.nail.art.nailscheduler.model.Slot.Status.PUBLISHED;
-import static fern.nail.art.nailscheduler.model.Slot.Status.SHIFTED;
 
 import fern.nail.art.nailscheduler.exception.EntityNotFoundException;
 import fern.nail.art.nailscheduler.exception.SlotConflictException;
@@ -21,6 +20,7 @@ import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +39,33 @@ public class SlotServiceImpl implements SlotService {
     private final UserProcedureTimeService procedureTimeService;
     @Value("${duration.min.procedure}")
     private Integer minSlotTime;
+    private int slotsInADay = 5;
+    private int intervalHours = 2;
+    private LocalTime firstSlotTime = LocalTime.of(9, 0);
 
     @Override
     @Transactional
     public Slot create(Slot slot) {
         validateTime(slot);
         return slotRepository.save(slot);
+    }
+
+    @Override
+    @Transactional
+    public void generateSlotsForDay(LocalDate date) {
+        List<Slot> daySlots = new ArrayList<>(slotsInADay);
+        LocalTime startTime = firstSlotTime;
+
+        for (int i = 0; i < slotsInADay; i++) {
+            Slot slot = new Slot();
+            slot.setStatus(PUBLISHED);
+            slot.setDate(date);
+            slot.setStartTime(startTime);
+            startTime = startTime.plusHours(intervalHours);
+            daySlots.add(slot);
+        }
+
+        slotRepository.saveAll(daySlots);
     }
 
     @Override
@@ -130,9 +151,7 @@ public class SlotServiceImpl implements SlotService {
     }
 
     private boolean isAccessible(User user, Slot slot) {
-        return slot.getStatus().equals(PUBLISHED)
-                || slot.getStatus().equals(SHIFTED)
-                || userService.isMaster(user);
+        return slot.getStatus().equals(PUBLISHED) || userService.isMaster(user);
     }
 
     private Slot getSlot(Long slotId, User user) {

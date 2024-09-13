@@ -2,7 +2,6 @@ package fern.nail.art.nailscheduler.service.impl;
 
 import static fern.nail.art.nailscheduler.model.Appointment.Status.CANCELED;
 import static fern.nail.art.nailscheduler.model.Appointment.Status.CONFIRMED;
-import static fern.nail.art.nailscheduler.model.Slot.Status.DELETED;
 import static fern.nail.art.nailscheduler.model.Slot.Status.UNPUBLISHED;
 
 import fern.nail.art.nailscheduler.exception.AppointmentStatusException;
@@ -103,7 +102,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private void validateAccess(Slot.Status status, User user) {
-        if ((status.equals(UNPUBLISHED) || status.equals(DELETED)) && !userService.isMaster(user)) {
+        if (status.equals(UNPUBLISHED) && !userService.isMaster(user)) {
             throw new AccessDeniedException("Access denied. User ID: %s.".formatted(user.getId()));
         }
     }

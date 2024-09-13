@@ -48,10 +48,6 @@ public class Slot implements Comparable<Slot> {
 
     public enum Status {
         UNPUBLISHED,
-        PUBLISHED,
-        //todo after confirming appointment that makeshift it changes on published again (visible)
-        SHIFTED,
-        //todo after confirming appointment changes it's will be deleted (invisible)
-        DELETED
+        PUBLISHED
     }
 }

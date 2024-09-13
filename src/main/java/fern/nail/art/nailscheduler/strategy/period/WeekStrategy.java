@@ -16,13 +16,12 @@ public class WeekStrategy extends PeriodStrategy {
 
     @Override
     public Range calculateRange(int offset) {
-        LocalDate today = LocalDate.now();
+        LocalDate dayOfWeek = LocalDate.now().plusWeeks(offset);
 
         LocalDate startOfWeek =
-                today.plusWeeks(offset).with(ChronoField.DAY_OF_WEEK, DayOfWeek.MONDAY.getValue());
+                dayOfWeek.with(ChronoField.DAY_OF_WEEK, DayOfWeek.MONDAY.getValue());
 
-        LocalDate endOfWeek =
-                today.plusWeeks(offset).with(ChronoField.DAY_OF_WEEK, DayOfWeek.SUNDAY.getValue());
+        LocalDate endOfWeek = dayOfWeek.with(ChronoField.DAY_OF_WEEK, DayOfWeek.SUNDAY.getValue());
 
         return new Range(startOfWeek, endOfWeek);
     }
