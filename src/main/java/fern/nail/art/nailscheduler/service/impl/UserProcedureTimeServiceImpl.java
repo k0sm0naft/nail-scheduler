@@ -27,12 +27,17 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
                 new UserProcedureTime(user, ProcedureType.MANICURE, defaultManicureTime);
         UserProcedureTime pedicureTime =
                 new UserProcedureTime(user, ProcedureType.PEDICURE, defaultPedicureTime);
-        return Set.of(manicureTime, pedicureTime);
+
+        int defaultComplexTime = defaultManicureTime + defaultPedicureTime;
+        UserProcedureTime complexTime =
+                new UserProcedureTime(user, ProcedureType.COMPLEX, defaultComplexTime);
+        return Set.of(manicureTime, pedicureTime, complexTime);
     }
 
     @Override
     public void setToUser(Set<ProcedureTimeDto> procedureTimes, User user) {
         for (ProcedureTimeDto ptd : procedureTimes) {
+
             user.getProcedureTimes().stream()
                 .filter(upt -> upt.getId().getProcedure().equals(ptd.procedure()))
                 .findFirst()

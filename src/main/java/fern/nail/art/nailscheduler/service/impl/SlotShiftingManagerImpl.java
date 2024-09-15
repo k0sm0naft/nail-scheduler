@@ -27,9 +27,11 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
 
     private List<Slot> getProcessedSlots(int duration, List<Slot> slots) {
         boolean isDayFromPast = slots.getFirst().getDate().isBefore(LocalDate.now());
+
         if (isDayFromPast) {
             return slots;
         }
+
         return new SlotProcessor(slots, duration).process().stream()
                                                  .filter(this::isWithinWorkingHours)
                                                  .toList();
@@ -69,7 +71,7 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
                 currentIndex++;
             }
 
-            handleLastModifiedSlot();
+            handleRemainingSlots();
 
             return modifiedSlots;
         }
@@ -77,14 +79,20 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
         private void handleNoNextBookedSlot(Slot currentSlot) {
             adjustSlotStartTime();
 
-            boolean nextExist = currentIndex + 1 < slots.size();
-            LocalTime nextStartTime = nextExist ? slots.get(currentIndex + 1).getStartTime() : null;
-            if (nextExist && !currentSlot.getStartTime().isBefore(nextStartTime)) {
-                return;
+            for (int i = currentIndex + 1; i < slots.size(); i++) {
+                Slot nextSlot = slots.get(i);
+                LocalTime nextStartTime = nextSlot.getStartTime();
+
+                if (currentSlot.getStartTime().isBefore(nextStartTime)) {
+                    break;
+                }
+                currentIndex++;
             }
 
-            modifiedSlots.addAll(slots.subList(currentIndex, slots.size()));
+            modifiedSlots.add(currentSlot);
+            currentIndex++;
         }
+
 
         private void handleNextBookedSlot(Slot currentSlot) {
             modifiedSlots.add(currentSlot);
@@ -122,12 +130,9 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
             }
         }
 
-        private void handleLastModifiedSlot() {
+        private void handleRemainingSlots() {
             if (currentIndex < slots.size()) {
-                Slot lastSlot = slots.get(currentIndex);
-                if (!modifiedSlots.contains(lastSlot)) {
-                    modifiedSlots.add(lastSlot);
-                }
+                modifiedSlots.addAll(slots.subList(currentIndex, slots.size()));
             }
         }
 
