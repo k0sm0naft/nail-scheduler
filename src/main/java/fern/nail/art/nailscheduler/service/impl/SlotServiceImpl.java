@@ -11,8 +11,8 @@ import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
+import fern.nail.art.nailscheduler.service.ScheduleManager;
 import fern.nail.art.nailscheduler.service.SlotService;
-import fern.nail.art.nailscheduler.service.SlotShiftingManager;
 import fern.nail.art.nailscheduler.service.StrategyHandler;
 import fern.nail.art.nailscheduler.service.UserProcedureTimeService;
 import fern.nail.art.nailscheduler.service.UserService;
@@ -35,7 +35,7 @@ public class SlotServiceImpl implements SlotService {
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final StrategyHandler strategyHandler;
-    private final SlotShiftingManager slotShiftingManager;
+    private final ScheduleManager scheduleManager;
     private final UserProcedureTimeService procedureTimeService;
     @Value("${duration.min.procedure}")
     private Integer minSlotTime;
@@ -81,8 +81,12 @@ public class SlotServiceImpl implements SlotService {
     public Slot getModified(Long slotId, Long userId, ProcedureType procedure) {
         List<Slot> slotsByDay = slotRepository.findAllOnSameDayAsSlotId(slotId);
         int procedureDuration = procedureTimeService.get(procedure, userId).getDuration();
+
+        LocalDate date = slotsByDay.getLast().getDate();
+        Range range = new Range(date, date);
+
         List<Slot> modifiedSlots =
-                slotShiftingManager.getModifiedSlots(slotsByDay, procedureDuration);
+                scheduleManager.getModifiedSlots(slotsByDay, procedureDuration, range);
         return modifiedSlots.stream()
                 .filter(slot -> slot.getId().equals(slotId))
                 .findFirst()
@@ -91,17 +95,17 @@ public class SlotServiceImpl implements SlotService {
 
     @Override
     public List<Slot> getAllByPeriod(PeriodType period, int offset) {
-        PeriodStrategy strategy = strategyHandler.getPeriodStrategy(period);
-        Range range = strategy.calculateRange(offset);
+        Range range = getRange(period, offset);
         return slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
     }
 
     @Override
     public List<Slot> getModifiedByPeriodAndProcedure(PeriodType period, int offset, Long userId,
             ProcedureType procedure) {
-        List<Slot> slots = getAllByPeriod(period, offset);
+        Range range = getRange(period, offset);
+        List<Slot> slots = slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
         int procedureDuration = procedureTimeService.get(procedure, userId).getDuration();
-        return slotShiftingManager.getModifiedSlots(slots, procedureDuration);
+        return scheduleManager.getModifiedSlots(slots, procedureDuration, range);
     }
 
     @Override
@@ -121,6 +125,11 @@ public class SlotServiceImpl implements SlotService {
     @Override
     public void deleteAllByDate(LocalDate date) {
         slotRepository.deleteAllByDate(date);
+    }
+
+    private Range getRange(PeriodType period, int offset) {
+        PeriodStrategy strategy = strategyHandler.getPeriodStrategy(period);
+        return strategy.calculateRange(offset);
     }
 
     private void validateExistence(Long slotId) {

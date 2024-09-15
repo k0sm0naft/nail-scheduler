@@ -1,50 +1,69 @@
 package fern.nail.art.nailscheduler.service.impl;
 
 import fern.nail.art.nailscheduler.model.Appointment;
+import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
-import fern.nail.art.nailscheduler.service.SlotShiftingManager;
+import fern.nail.art.nailscheduler.model.Workday;
+import fern.nail.art.nailscheduler.service.ScheduleManager;
+import fern.nail.art.nailscheduler.service.WorkdayService;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SlotShiftingManagerImpl implements SlotShiftingManager {
+@RequiredArgsConstructor
+public class ScheduleManagerImpl implements ScheduleManager {
+    private final WorkdayService workdayService;
+
     @Override
-    public List<Slot> getModifiedSlots(List<Slot> originalSlots, int duration) {
+    public List<Slot> getModifiedSlots(List<Slot> originalSlots, int duration, Range range) {
+        Map<LocalDate, Workday> workdayMap =
+                workdayService.getByRange(range).stream().collect(Collectors.toMap(Workday::getDate,
+                        Function.identity()));
         return originalSlots.stream()
                             .sorted(Slot::compareTo)
                             .collect(Collectors.groupingBy(Slot::getDate))
                             .values().parallelStream()
-                            .map(daySlots -> getProcessedSlots(duration, daySlots))
+                            .map(daySlots -> getProcessedSlots(duration, daySlots,
+                                    getWorkday(daySlots, workdayMap)))
                             .flatMap(Collection::stream)
                             .toList();
     }
 
-    private List<Slot> getProcessedSlots(int duration, List<Slot> slots) {
+    private List<Slot> getProcessedSlots(int duration, List<Slot> slots, Workday workday) {
         boolean isDayFromPast = slots.getFirst().getDate().isBefore(LocalDate.now());
 
         if (isDayFromPast) {
             return slots;
         }
 
-        return new SlotProcessor(slots, duration).process().stream()
-                                                 .filter(this::isWithinWorkingHours)
-                                                 .toList();
+        DayProcessor dayProcessor = new DayProcessor(slots, duration);
+        return dayProcessor.process().stream()
+                            .filter(slot -> isWithinWorkingHours(slot, workday, duration))
+                            .toList();
     }
 
-    private boolean isWithinWorkingHours(Slot slot) {
-        //todo make working hours variables and set them from properties
-        return slot.getStartTime().isAfter(LocalTime.of(6, 59))
-                && slot.getStartTime().isBefore(LocalTime.of(19, 1));
+    private Workday getWorkday(List<Slot> daySlots, Map<LocalDate, Workday> workdayMap) {
+        return workdayMap.get(daySlots.getFirst().getDate());
+    }
+
+    private boolean isWithinWorkingHours(Slot slot, Workday workday, int duration) {
+        boolean isAfterWorkStart = !slot.getStartTime().isBefore(workday.getStartTime());
+        boolean isBeforeWorkEnd =
+                !slot.getStartTime().plusMinutes(duration).isAfter(workday.getEndTime());
+
+        return isAfterWorkStart && isBeforeWorkEnd;
     }
 
     @RequiredArgsConstructor
-    private class SlotProcessor {
+    private class DayProcessor {
         private final List<Slot> slots;
         private final int duration;
         private final List<Slot> modifiedSlots = new ArrayList<>();
@@ -92,7 +111,6 @@ public class SlotShiftingManagerImpl implements SlotShiftingManager {
             modifiedSlots.add(currentSlot);
             currentIndex++;
         }
-
 
         private void handleNextBookedSlot(Slot currentSlot) {
             modifiedSlots.add(currentSlot);
