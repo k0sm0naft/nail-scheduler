@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class SlotScheduledJob {
     private final SlotService service;
 
+    //todo move to service
     @EventListener(ApplicationReadyEvent.class)
     private void onApplicationReady() {
         cleanOldFreeSlots();
