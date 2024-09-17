@@ -50,7 +50,7 @@ public class WorkdayServiceImpl implements WorkdayService {
 
     @Override
     public void delete(LocalDate date) {
-        if (workdayRepository.existsById(date)) {
+        if (!workdayRepository.existsById(date)) {
             throw new EntityNotFoundException(WorkdayTemplate.class, date);
         }
         workdayRepository.deleteById(date);

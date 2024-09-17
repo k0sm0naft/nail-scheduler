@@ -46,8 +46,9 @@ public class ScheduleManagerImpl implements ScheduleManager {
 
         DayProcessor dayProcessor = new DayProcessor(slots, duration);
         return dayProcessor.process().stream()
-                            .filter(slot -> isWithinWorkingHours(slot, workday, duration))
-                            .toList();
+                           .filter(slot ->
+                                   isWithinWorkingHours(slot, workday, duration) || isBooked(slot))
+                           .toList();
     }
 
     private Workday getWorkday(List<Slot> daySlots, Map<LocalDate, Workday> workdayMap) {
@@ -60,6 +61,10 @@ public class ScheduleManagerImpl implements ScheduleManager {
                 !slot.getStartTime().plusMinutes(duration).isAfter(workday.getEndTime());
 
         return isAfterWorkStart && isBeforeWorkEnd;
+    }
+
+    private boolean isBooked(Slot slot) {
+        return slot != null && slot.getAppointment() != null;
     }
 
     @RequiredArgsConstructor
@@ -173,10 +178,6 @@ public class ScheduleManagerImpl implements ScheduleManager {
                     currentSlot.setStartTime(getEndTime(previousSlot));
                 }
             }
-        }
-
-        private boolean isBooked(Slot slot) {
-            return slot != null && slot.getAppointment() != null;
         }
 
         private LocalTime getEndTime(Slot slot) {
