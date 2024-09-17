@@ -99,6 +99,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return getResponseEntity(NOT_FOUND, localizedMessage.formatted(ex.getMessage()));
     }
 
+    @ExceptionHandler(WorkdayTemplateSizeException.class)
+    protected ResponseEntity<Object> handleWorkdayTemplateSize(Exception ex, WebRequest request) {
+        String localizedMessage =
+                messageSource.getMessage("error.wrong.template.size", null, request.getLocale());
+        return getResponseEntity(INTERNAL_SERVER_ERROR,
+                localizedMessage.formatted(ex.getMessage()));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     protected ResponseEntity<Object> handleAccessDenied(Exception ex, WebRequest request) {
         String localizedMessage =

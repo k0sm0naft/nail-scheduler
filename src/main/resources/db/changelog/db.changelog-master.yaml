@@ -11,3 +11,7 @@ databaseChangeLog:
       file: db/changelog/changes/insert-roles.yml
   - include:
       file: db/changelog/changes/create-user_procedure_times-table.yaml
+  - include:
+      file: db/changelog/changes/create-workday_templates-table.yaml
+  - include:
+      file: db/changelog/changes/create-workdays-table.yaml

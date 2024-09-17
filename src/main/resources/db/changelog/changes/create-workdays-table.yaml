@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-workdays-table
+      author: Artem_Akymenko
+      changes:
+        - createTable:
+            tableName: workdays
+            columns:
+              - column:
+                  name: date
+                  type: date
+                  autoIncrement: false
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: start_time
+                  type: time
+                  constraints:
+                    nullable: true
+              - column:
+                  name: end_time
+                  type: time
+                  constraints:
+                    nullable: true

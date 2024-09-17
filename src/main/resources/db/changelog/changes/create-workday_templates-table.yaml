@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-workday_templates-table
+      author: Artem_Akymenko
+      changes:
+        - createTable:
+            tableName: workday_templates
+            columns:
+              - column:
+                  name: day_of_week
+                  type: varchar(10)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: time
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_time
+                  type: time
+                  constraints:
+                    nullable: false
