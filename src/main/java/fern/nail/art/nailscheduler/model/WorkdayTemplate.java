@@ -1,5 +1,6 @@
 package fern.nail.art.nailscheduler.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -23,7 +24,10 @@ public class WorkdayTemplate {
     @Enumerated(EnumType.STRING)
     private DayOfWeek dayOfWeek;
 
+    @Column(nullable = false)
     private LocalTime startTime;
+
+    @Column(nullable = false)
     private LocalTime endTime;
 }
 
