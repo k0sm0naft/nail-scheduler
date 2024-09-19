@@ -41,7 +41,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_MASTER')")
     public UserFullResponseDto get(@PathVariable Long id) {
-        User user = userService.getFullInfo(id);
+        User user = userService.getInfo(id);
         return userMapper.toFullDto(user);
     }
 

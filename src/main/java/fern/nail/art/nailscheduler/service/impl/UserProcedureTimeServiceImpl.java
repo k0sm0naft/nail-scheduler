@@ -10,6 +10,8 @@ import fern.nail.art.nailscheduler.service.UserProcedureTimeService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,6 +24,7 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
     private Integer defaultPedicureTime;
 
     @Override
+    @CacheEvict(value = "userProcedureTimeCache", key = "#user.id + '*'", allEntries = true)
     public Set<UserProcedureTime> getDefault(User user) {
         UserProcedureTime manicureTime =
                 new UserProcedureTime(user, ProcedureType.MANICURE, defaultManicureTime);
@@ -35,6 +38,7 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
     }
 
     @Override
+    @CacheEvict(value = "userProcedureTimeCache", key = "#user.id + '*'", allEntries = true)
     public void setToUser(Set<ProcedureTimeDto> procedureTimes, User user) {
         for (ProcedureTimeDto ptd : procedureTimes) {
 
@@ -46,6 +50,7 @@ public class UserProcedureTimeServiceImpl implements UserProcedureTimeService {
     }
 
     @Override
+    @Cacheable(value = "userProcedureTimeCache", key = "#userId + '_' + #procedure")
     public UserProcedureTime get(ProcedureType procedure, Long userId) {
         UserProcedureTime.Id id = new UserProcedureTime.Id(userId, procedure);
         return procedureTimeRepository.findById(id).orElseThrow(

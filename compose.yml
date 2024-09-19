@@ -1,15 +1,30 @@
 services:
   db:
-    image: postgres:16.4
+    image: postgres:16.4-alpine
     container_name: postgres_db
     environment:
-      POSTGRES_DB: ${DB_name}
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
 
 volumes:
   postgres_data:
