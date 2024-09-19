@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,6 +24,7 @@ public class WorkdayTemplateServiceImpl implements WorkdayTemplateService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {"workdayTemplateCache", "workdayCache"}, allEntries = true)
     public List<WorkdayTemplate> update(Set<DayOfWeek> days, WorkdayTemplate template) {
         Set<WorkdayTemplate> newTemplates = days.stream()
                                            .map(dayOfWeek -> new WorkdayTemplate(dayOfWeek,
@@ -31,6 +34,7 @@ public class WorkdayTemplateServiceImpl implements WorkdayTemplateService {
     }
 
     @Override
+    @Cacheable(value = "workdayTemplateCache")
     public List<WorkdayTemplate> getAll() {
         List<WorkdayTemplate> templates = templateRepository.findAll();
         if (templates.size() != DayOfWeek.values().length) {
@@ -41,6 +45,7 @@ public class WorkdayTemplateServiceImpl implements WorkdayTemplateService {
 
     @PostConstruct
     @Transactional
+    @CacheEvict(cacheNames = {"workdayTemplateCache", "workdayCache"}, allEntries = true)
     public void init() {
         List<DayOfWeek> existingDaysOfWeek = templateRepository.findAll().stream()
                                                               .map(WorkdayTemplate::getDayOfWeek)

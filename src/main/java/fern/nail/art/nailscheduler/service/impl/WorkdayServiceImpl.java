@@ -6,7 +6,7 @@ import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Workday;
 import fern.nail.art.nailscheduler.model.WorkdayTemplate;
 import fern.nail.art.nailscheduler.repository.WorkdayRepository;
-import fern.nail.art.nailscheduler.service.StrategyHandler;
+import fern.nail.art.nailscheduler.service.PeriodStrategyHandler;
 import fern.nail.art.nailscheduler.service.WorkdayService;
 import fern.nail.art.nailscheduler.service.WorkdayTemplateService;
 import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
@@ -19,6 +19,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aop.framework.AopContext;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,9 +29,10 @@ import org.springframework.stereotype.Service;
 public class WorkdayServiceImpl implements WorkdayService {
     private final WorkdayRepository workdayRepository;
     private final WorkdayTemplateService templateService;
-    private final StrategyHandler strategyHandler;
+    private final PeriodStrategyHandler periodStrategyHandler;
 
     @Override
+    @CacheEvict(value = "workdayCache", allEntries = true)
     public Workday createOrUpdate(Workday workday) {
         return workdayRepository.save(workday);
     }
@@ -36,19 +40,23 @@ public class WorkdayServiceImpl implements WorkdayService {
     @Override
     @Transactional
     public List<Workday> getByPeriod(PeriodType period, int offset) {
-        PeriodStrategy periodStrategy = strategyHandler.getPeriodStrategy(period);
+        PeriodStrategy periodStrategy = periodStrategyHandler.getPeriodStrategy(period);
         Range range = periodStrategy.calculateRange(offset);
-        return getByRange(range);
+
+        WorkdayService proxy = (WorkdayService) AopContext.currentProxy();
+        return proxy.getByRange(range);
     }
 
     @Override
     @Transactional
+    @Cacheable(value = "workdayCache", key = "#range.startDate + '-' + #range.endDate")
     public List<Workday> getByRange(Range range) {
         RangeProcessor processor = new RangeProcessor(range);
         return processor.process();
     }
 
     @Override
+    @CacheEvict(cacheNames = "workdayCache", allEntries = true)
     public void delete(LocalDate date) {
         if (!workdayRepository.existsById(date)) {
             throw new EntityNotFoundException(WorkdayTemplate.class, date);
