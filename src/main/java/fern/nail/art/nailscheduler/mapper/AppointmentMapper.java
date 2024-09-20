@@ -12,6 +12,7 @@ import org.mapstruct.Named;
 @Mapper(config = MapperConfig.class, uses = UserProcedureTimesMapper.class)
 public interface AppointmentMapper {
     @Mapping(target = "slotId", source = "slot.id")
+    @Mapping(target = "userId", source = "userProcedureTime.user.id")
     @Mapping(target = "date", source = "slot.date")
     @Mapping(target = "startTime", source = "slot.startTime")
     @Mapping(target = "procedureTime", source = "userProcedureTime")

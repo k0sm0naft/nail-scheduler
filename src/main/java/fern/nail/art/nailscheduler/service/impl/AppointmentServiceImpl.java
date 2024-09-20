@@ -22,6 +22,10 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -37,21 +41,23 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
+    @CachePut(value = "appointmentCache", key = "#result.id")
     public Appointment create(Appointment appointment, ProcedureType procedure, Long userId) {
-        Slot slot = slotService.getModified(appointment.getSlot().getId(), userId, procedure);
+        UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, userId);
+        int duration = userProcedureTime.getDuration();
+        Slot slot = slotService.getModified(appointment.getSlot().getId(), duration);
 
         if (slot.getAppointment() != null) {
             throw new SlotAvailabilityException(slot);
         }
 
-        UserProcedureTime userProcedureTime = procedureTimeService.get(procedure, userId);
         appointment.setUserProcedureTime(userProcedureTime);
         appointment.setStatus(Appointment.Status.PENDING);
         appointment.setSlot(slot);
         appointment = appointmentRepository.save(appointment);
 
         slot.setAppointment(appointment);
-        slotService.update(slot, slot.getId());
+        slotService.createOrUpdate(slot);
 
         eventPublisher.publishEvent(new AppointmentCreatedEvent(appointment));
         return appointment;
@@ -59,6 +65,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
+    @CachePut(value = "appointmentCache", key = "#result.id")
     public Appointment changeStatus(Long appointmentId, boolean isConfirmed, User user) {
         Appointment appointment = getAppointment(appointmentId, user);
 
@@ -78,6 +85,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Cacheable(value = "appointmentCache", key = "#appointmentId")
     public Appointment get(Long appointmentId, User user) {
         return getAppointment(appointmentId, user);
     }
@@ -98,6 +106,10 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "appointmentCache", key = "#appointmen.id"),
+            @CacheEvict(value = "slotCache", allEntries = true)
+    })
     public void delete(Appointment appointment) {
         Slot slot = appointment.getSlot();
         LocalDateTime slotStart = LocalDateTime.of(slot.getDate(), slot.getStartTime());
