@@ -15,6 +15,9 @@ import fern.nail.art.nailscheduler.service.UserService;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CachePut(value = "userCache", key = "#result.id")
     public User register(User user) {
         validateUsername(user.getUsername());
         validatePhone(user);
@@ -49,19 +53,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "userCache", key = "#userId")
     public User getInfo(Long userId) {
         return getById(userId);
     }
 
     @Override
-    public User getFullInfo(Long userId) {
-        return userRepository.findByIdWithProcedureTimes(userId)
-                             .orElseThrow(
-                                     () -> new EntityNotFoundException(User.class, userId));
-    }
-
-    @Override
     @Transactional
+    @CacheEvict(value = "userCache", key = "#userId")
     public User update(Long userId, UserUpdateRequestDto requestDto) {
         User user = getById(userId);
         userMapper.updateFromDto(requestDto, user);
@@ -78,6 +77,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "userCache", key = "#id")
     public User updateProcedureTimes(Long id, Set<ProcedureTimeDto> procedureTimes) {
         User user = getById(id);
         procedureTimeService.setToUser(procedureTimes, user);

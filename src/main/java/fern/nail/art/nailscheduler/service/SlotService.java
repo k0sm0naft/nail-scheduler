@@ -8,13 +8,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface SlotService {
-    Slot create(Slot slot);
+    Slot createOrUpdate(Slot slot);
 
     void generateSlotsForDay(LocalDate date);
 
-    Slot update(Slot slot, Long slotId);
-
-    Slot getModified(Long slotId, Long userId, ProcedureType procedure);
+    Slot getModified(Long slotId, int procedureDuration);
 
     List<Slot> getAllByPeriod(PeriodType periodType, int offset);
 

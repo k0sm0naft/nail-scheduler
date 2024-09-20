@@ -15,7 +15,10 @@ public class SlotDtoFactory {
 
     public SlotResponseDto createDto(Slot slot, User user) {
         if (userService.isMaster(user)) {
-            return slotMapper.toMasterDto(slot);
+            if (slot.getAppointment() == null) {
+                return slotMapper.toFreeMasterDto(slot);
+            }
+            return slotMapper.toBusyMasterDto(slot);
         } else {
             return slotMapper.toPublicDto(slot);
         }

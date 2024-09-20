@@ -8,6 +8,8 @@ import java.time.LocalTime;
 public record AppointmentResponseDto(
         Long id,
 
+        Long userId,
+
         Long slotId,
 
         LocalDate date,

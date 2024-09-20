@@ -12,8 +12,6 @@ public interface UserService {
 
     User getInfo(Long userId);
 
-    User getFullInfo(Long userId);
-
     User update(Long userId, UserUpdateRequestDto updateRequestDto);
 
     void changePassword(Long userId, String newPassword);

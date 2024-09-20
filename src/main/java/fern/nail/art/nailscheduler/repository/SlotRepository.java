@@ -22,11 +22,15 @@ public interface SlotRepository extends JpaRepository<Slot, Long> {
     @EntityGraph(attributePaths = "appointment.userProcedureTime")
     List<Slot> findAllByDateBetween(LocalDate startDate, LocalDate endDate);
 
-    @Query("FROM Slot s WHERE s.date = (SELECT s2.date FROM Slot s2 WHERE s2.id = :id)")
+    @Query("FROM Slot s "
+            + "LEFT JOIN FETCH s.appointment a "
+            + "LEFT JOIN FETCH a.userProcedureTime "
+            + "WHERE s.date = (SELECT s2.date FROM Slot s2 WHERE s2.id = :id)")
     List<Slot> findAllOnSameDayAsSlotId(Long id);
 
     @Modifying
-    @Query("DELETE FROM Slot s WHERE s.date < :date AND s.appointment IS NULL")
+    @Query("DELETE FROM Slot s "
+            + "WHERE s.date < :date AND s.appointment IS NULL")
     void deleteEmptyByDateBefore(LocalDate date);
 
     void deleteAllByDate(LocalDate date);

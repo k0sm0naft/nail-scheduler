@@ -1,6 +1,5 @@
 package fern.nail.art.nailscheduler.controller;
 
-import fern.nail.art.nailscheduler.dto.slot.MasterSlotResponseDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotDtoFactory;
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotResponseDto;
@@ -42,8 +41,8 @@ public class MasterSlotController {
             @RequestBody @Valid SlotRequestDto slotRequestDto,
             @AuthenticationPrincipal User user
     ) {
-        Slot slot = slotMapper.toModel(slotRequestDto);
-        slot = slotService.create(slot);
+        Slot slot = slotMapper.toModel(slotRequestDto, null);
+        slot = slotService.createOrUpdate(slot);
         return dtoFactory.createDto(slot, user);
     }
 
@@ -54,20 +53,21 @@ public class MasterSlotController {
             @PathVariable Long id,
             @AuthenticationPrincipal User user
     ) {
-        Slot slot = slotMapper.toModel(slotRequestDto);
-        slot = slotService.update(slot, id);
+        Slot slot = slotMapper.toModel(slotRequestDto, id);
+        slot = slotService.createOrUpdate(slot);
         return dtoFactory.createDto(slot, user);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<MasterSlotResponseDto> getByPeriod(
+    public List<SlotResponseDto> getByPeriod(
             @RequestParam PeriodType period,
-            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset
+            @RequestParam(value = "offset", defaultValue = "0", required = false) int offset,
+            @AuthenticationPrincipal User user
     ) {
         List<Slot> slots = slotService.getAllByPeriod(period, offset);
         return slots.stream()
-                    .map(slotMapper::toMasterDto)
+                    .map((Slot slot) -> dtoFactory.createDto(slot, user))
                     .toList();
     }
 

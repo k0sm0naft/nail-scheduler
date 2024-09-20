@@ -23,7 +23,7 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @Table(name = "user_procedure_times")
-public class UserProcedureTime {
+public class UserProcedureTime implements Serializable {
     @EmbeddedId
     private Id id;
 
