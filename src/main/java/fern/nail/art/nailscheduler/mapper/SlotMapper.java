@@ -1,7 +1,8 @@
 package fern.nail.art.nailscheduler.mapper;
 
 import fern.nail.art.nailscheduler.config.MapperConfig;
-import fern.nail.art.nailscheduler.dto.slot.MasterSlotResponseDto;
+import fern.nail.art.nailscheduler.dto.slot.MasterBusySlotResponseDto;
+import fern.nail.art.nailscheduler.dto.slot.MasterFreeSlotResponseDto;
 import fern.nail.art.nailscheduler.dto.slot.PublicSlotResponseDto;
 import fern.nail.art.nailscheduler.dto.slot.SlotRequestDto;
 import fern.nail.art.nailscheduler.model.Slot;
@@ -20,10 +21,14 @@ public interface SlotMapper {
     @Mapping(target = "notes", source = "appointment.notes")
     @Mapping(target = "appointmentCreatedAt", source = "appointment.createdAt")
     @Mapping(target = "appointmentId", source = "appointment.id")
-    MasterSlotResponseDto toMasterDto(Slot slot);
+    @Mapping(target = "userId", source = "appointment.userProcedureTime.user.id")
+    MasterBusySlotResponseDto toBusyMasterDto(Slot slot);
 
-    @Mapping(target = "status", source = "isPublished", qualifiedByName = "setStatus")
-    Slot toModel(SlotRequestDto requestDto);
+    @Mapping(target = "slotStatus", source = "status")
+    MasterFreeSlotResponseDto toFreeMasterDto(Slot slot);
+
+    @Mapping(target = "status", source = "requestDto.isPublished", qualifiedByName = "setStatus")
+    Slot toModel(SlotRequestDto requestDto, Long id);
 
     @Named("setStatus")
     default Slot.Status setStatus(Boolean isPublished) {

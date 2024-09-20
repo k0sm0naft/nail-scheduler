@@ -11,11 +11,10 @@ import fern.nail.art.nailscheduler.model.Range;
 import fern.nail.art.nailscheduler.model.Slot;
 import fern.nail.art.nailscheduler.model.User;
 import fern.nail.art.nailscheduler.repository.SlotRepository;
+import fern.nail.art.nailscheduler.service.PeriodStrategyHandler;
 import fern.nail.art.nailscheduler.service.ScheduleManager;
 import fern.nail.art.nailscheduler.service.SlotService;
-import fern.nail.art.nailscheduler.service.StrategyHandler;
 import fern.nail.art.nailscheduler.service.UserProcedureTimeService;
-import fern.nail.art.nailscheduler.service.UserService;
 import fern.nail.art.nailscheduler.strategy.period.PeriodStrategy;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
@@ -24,7 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -32,9 +34,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SlotServiceImpl implements SlotService {
     private final SlotRepository slotRepository;
-    private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
-    private final StrategyHandler strategyHandler;
+    private final PeriodStrategyHandler periodStrategyHandler;
     private final ScheduleManager scheduleManager;
     private final UserProcedureTimeService procedureTimeService;
     @Value("${duration.min.procedure}")
@@ -45,13 +46,15 @@ public class SlotServiceImpl implements SlotService {
 
     @Override
     @Transactional
-    public Slot create(Slot slot) {
+    @CacheEvict(value = "slotCache", allEntries = true)
+    public Slot createOrUpdate(Slot slot) {
         validateTime(slot);
         return slotRepository.save(slot);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "slotCache", allEntries = true)
     public void generateSlotsForDay(LocalDate date) {
         List<Slot> daySlots = new ArrayList<>(slotsInADay);
         LocalTime startTime = firstSlotTime;
@@ -69,18 +72,12 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    @Transactional
-    public Slot update(Slot slot, Long slotId) {
-        validateExistence(slotId);
-        validateTime(slot);
-        slot.setId(slotId);
-        return slotRepository.save(slot);
-    }
-
-    @Override
-    public Slot getModified(Long slotId, Long userId, ProcedureType procedure) {
+    public Slot getModified(Long slotId, int procedureDuration) {
         List<Slot> slotsByDay = slotRepository.findAllOnSameDayAsSlotId(slotId);
-        int procedureDuration = procedureTimeService.get(procedure, userId).getDuration();
+
+        if (slotsByDay.isEmpty()) {
+            throw new EntityNotFoundException(Slot.class, slotId);
+        }
 
         LocalDate date = slotsByDay.getLast().getDate();
         Range range = new Range(date, date);
@@ -94,6 +91,7 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
+    @Cacheable(value = "slotCache")
     public List<Slot> getAllByPeriod(PeriodType period, int offset) {
         Range range = getRange(period, offset);
         return slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
@@ -102,14 +100,15 @@ public class SlotServiceImpl implements SlotService {
     @Override
     public List<Slot> getModifiedByPeriodAndProcedure(PeriodType period, int offset, Long userId,
             ProcedureType procedure) {
-        Range range = getRange(period, offset);
-        List<Slot> slots = slotRepository.findAllByDateBetween(range.startDate(), range.endDate());
+        SlotService proxy = (SlotService) AopContext.currentProxy();
+        List<Slot> slots = proxy.getAllByPeriod(period, offset);
         int procedureDuration = procedureTimeService.get(procedure, userId).getDuration();
-        return scheduleManager.getModifiedSlots(slots, procedureDuration, range);
+        return scheduleManager.getModifiedSlots(slots, procedureDuration, getRange(period, offset));
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "slotCache", allEntries = true)
     public void delete(Long slotId, User user) {
         validateExistence(slotId);
         eventPublisher.publishEvent(new SlotDeletedEvent(slotId, user));
@@ -123,12 +122,13 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
+    @CacheEvict(value = "slotCache", allEntries = true)
     public void deleteAllByDate(LocalDate date) {
         slotRepository.deleteAllByDate(date);
     }
 
     private Range getRange(PeriodType period, int offset) {
-        PeriodStrategy strategy = strategyHandler.getPeriodStrategy(period);
+        PeriodStrategy strategy = periodStrategyHandler.getPeriodStrategy(period);
         return strategy.calculateRange(offset);
     }
 
@@ -162,15 +162,5 @@ public class SlotServiceImpl implements SlotService {
             minutesToAdd = slot.getAppointment().getUserProcedureTime().getDuration();
         }
         return slot.getStartTime().plusMinutes(minutesToAdd);
-    }
-
-    private boolean isAccessible(User user, Slot slot) {
-        return slot.getStatus().equals(PUBLISHED) || userService.isMaster(user);
-    }
-
-    private Slot getSlot(Long slotId, User user) {
-        return slotRepository.findByIdWithAppointments(slotId)
-                             .filter(s -> isAccessible(user, s))
-                             .orElseThrow(() -> new EntityNotFoundException(Slot.class, slotId));
     }
 }

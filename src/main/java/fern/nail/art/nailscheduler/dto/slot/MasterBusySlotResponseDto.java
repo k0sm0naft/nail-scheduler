@@ -9,7 +9,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public final class MasterSlotResponseDto extends SlotResponseDto {
+public final class MasterBusySlotResponseDto extends SlotResponseDto {
+    private Long userId;
+
     private ProcedureTimeDto procedureTime;
 
     private Long appointmentId;
@@ -21,6 +23,5 @@ public final class MasterSlotResponseDto extends SlotResponseDto {
     private String notes;
 
     private Slot.Status slotStatus;
-
 }
 
