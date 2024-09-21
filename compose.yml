@@ -10,21 +10,46 @@ services:
       - "${DB_LOCAL_PORT}:${DB_DOCKER_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  redis:
+  cache:
     image: redis:alpine
-    container_name: redis
+    container_name: redis_cache
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
-    networks:
-      - app-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-networks:
-  app-network:
-    driver: bridge
-
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    restart: on-failure
+    container_name: nailscheduler_core
+    image: core
+    build: .
+    ports:
+      - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
+      - "${DEBUG_PORT}:${DEBUG_PORT}"
+    environment:
+      DB_HOST: postgres_db
+      DB_LOCAL_PORT: ${DB_LOCAL_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      REDIS_HOST: redis_cache
+      REDIS_PORT: ${REDIS_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
 volumes:
   postgres_data:
