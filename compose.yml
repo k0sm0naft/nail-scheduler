@@ -38,7 +38,7 @@ services:
     image: api
     build: ./api-service
     ports:
-      - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
+      - "${API_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
       - "${DEBUG_PORT}:${DEBUG_PORT}"
     environment:
       DB_HOST: postgres_db
