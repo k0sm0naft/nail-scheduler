@@ -27,16 +27,16 @@ services:
       timeout: 10s
       retries: 5
 
-  app:
+  api:
     depends_on:
       db:
         condition: service_healthy
       cache:
         condition: service_healthy
     restart: on-failure
-    container_name: nailscheduler_core
-    image: core
-    build: .
+    container_name: nail-scheduler_api
+    image: api
+    build: ./api-service
     ports:
       - "${SPRING_LOCAL_PORT}:${SPRING_DOCKER_PORT}"
       - "${DEBUG_PORT}:${DEBUG_PORT}"
