@@ -17,7 +17,7 @@ services:
       retries: 5
 
   cache:
-    image: redis:alpine
+    image: redis:7.4.0-alpine3.20
     container_name: redis_cache
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
