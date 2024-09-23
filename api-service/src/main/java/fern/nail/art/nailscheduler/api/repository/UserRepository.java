@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdWithProcedureTimes(Long id);
 
     Optional<User> findByPhone(String phone);
+
+    @EntityGraph(attributePaths = "roles")
+    Optional<User> findByTelegramId(String telegramId);
 }

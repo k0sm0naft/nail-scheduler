@@ -5,5 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 
 public interface MenuManager {
     InlineKeyboardMarkup createMainMenu(User.Role role);
+
     InlineKeyboardMarkup createSubMenu(User.Role role, String context);
 }

@@ -17,4 +17,8 @@ public interface UserService {
     void changePassword(Long userId, String newPassword);
 
     User updateProcedureTimes(Long id, Set<ProcedureTimeDto> procedureTimes);
+
+    void setTelegramId(Long userId, String telegramId);
+
+    User getByTelegramId(String telegramId);
 }

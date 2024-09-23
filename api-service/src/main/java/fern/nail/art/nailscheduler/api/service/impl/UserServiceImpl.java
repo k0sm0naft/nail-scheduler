@@ -84,6 +84,20 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Override
+    @Transactional
+    public void setTelegramId(Long userId, String telegramId) {
+        User user = getById(userId);
+        user.setTelegramId(telegramId);
+        userRepository.save(user);
+    }
+
+    @Override
+    public User getByTelegramId(String id) {
+        return userRepository.findByTelegramId(id)
+                             .orElseThrow(() -> new EntityNotFoundException(User.class, id));
+    }
+
     private User getById(Long id) {
         return userRepository.findByIdWithProcedureTimes(id)
                              .orElseThrow(() -> new EntityNotFoundException(User.class, id));

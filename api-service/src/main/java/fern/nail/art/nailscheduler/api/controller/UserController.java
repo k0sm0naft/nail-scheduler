@@ -3,6 +3,7 @@ package fern.nail.art.nailscheduler.api.controller;
 import fern.nail.art.nailscheduler.api.dto.user.UpdateProcedureTimesDto;
 import fern.nail.art.nailscheduler.api.dto.user.UserFullResponseDto;
 import fern.nail.art.nailscheduler.api.dto.user.UserResponseDto;
+import fern.nail.art.nailscheduler.api.dto.user.UserTelegramResponseDto;
 import fern.nail.art.nailscheduler.api.dto.user.UserUpdatePasswordDto;
 import fern.nail.art.nailscheduler.api.dto.user.UserUpdateRequestDto;
 import fern.nail.art.nailscheduler.api.mapper.UserMapper;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -82,6 +84,21 @@ public class UserController {
             @AuthenticationPrincipal User user
     ) {
         userService.changePassword(user.getId(), updatePasswordDto.password());
+    }
+
+    @PostMapping("/{id}/telegram")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('ROLE_MASTER')")
+    public void setTelegramId(@PathVariable Long id, @RequestParam String telegramId) {
+        userService.setTelegramId(id, telegramId);
+    }
+
+    @GetMapping("/telegram/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('ROLE_MASTER')")
+    public UserTelegramResponseDto getUserByTelegramId(@PathVariable String telegramId) {
+        User user = userService.getByTelegramId(telegramId);
+        return userMapper.toTelegramDto(user);
     }
 }
 
