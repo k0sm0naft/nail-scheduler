@@ -26,6 +26,7 @@
     <modules>
         <module>api-service</module>
         <module>telegram-service</module>
+        <module>common</module>
     </modules>
 
     <dependencies>
@@ -67,6 +68,17 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <version>${jjwt.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fern.nail.art</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

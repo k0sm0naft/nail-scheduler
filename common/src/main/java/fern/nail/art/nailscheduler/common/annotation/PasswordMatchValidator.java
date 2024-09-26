@@ -1,4 +1,4 @@
-package fern.nail.art.nailscheduler.api.annotation;
+package fern.nail.art.nailscheduler.common.annotation;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.TYPE;

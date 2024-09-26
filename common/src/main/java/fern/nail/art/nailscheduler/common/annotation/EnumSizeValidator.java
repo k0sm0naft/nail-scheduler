@@ -1,4 +1,4 @@
-package fern.nail.art.nailscheduler.api.annotation;
+package fern.nail.art.nailscheduler.common.annotation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

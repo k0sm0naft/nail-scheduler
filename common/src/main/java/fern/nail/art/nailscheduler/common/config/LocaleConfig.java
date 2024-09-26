@@ -1,4 +1,4 @@
-package fern.nail.art.nailscheduler.api.config;
+package fern.nail.art.nailscheduler.common.config;
 
 import java.util.Locale;
 import org.springframework.context.MessageSource;
