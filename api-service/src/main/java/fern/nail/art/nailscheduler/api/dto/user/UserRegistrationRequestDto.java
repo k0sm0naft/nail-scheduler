@@ -29,6 +29,8 @@ public record UserRegistrationRequestDto(
         String firstName,
 
         @Name
-        String lastName
+        String lastName,
+
+        Long telegramId
 ) {
 }

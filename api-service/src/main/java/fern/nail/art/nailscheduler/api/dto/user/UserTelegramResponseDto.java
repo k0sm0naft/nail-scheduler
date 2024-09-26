@@ -2,7 +2,7 @@ package fern.nail.art.nailscheduler.api.dto.user;
 
 public record UserTelegramResponseDto(
         Long id,
-        String chatId,
+        String telegramId,
         String phone,
         String firstName,
         String lastName,

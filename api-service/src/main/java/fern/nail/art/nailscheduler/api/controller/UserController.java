@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -86,15 +87,15 @@ public class UserController {
         userService.changePassword(user.getId(), updatePasswordDto.password());
     }
 
-    @PostMapping("/{id}/telegram")
+    @PatchMapping("/{id}/telegram")
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasRole('ROLE_MASTER')")
     public void setTelegramId(@PathVariable Long id, @RequestParam String telegramId) {
         userService.setTelegramId(id, telegramId);
     }
 
-    @GetMapping("/telegram/{id}")
-    @ResponseStatus(HttpStatus.ACCEPTED)
+    @GetMapping("/telegram/{telegramId}")
+    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_MASTER')")
     public UserTelegramResponseDto getUserByTelegramId(@PathVariable String telegramId) {
         User user = userService.getByTelegramId(telegramId);
