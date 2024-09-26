@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.telegram.dto;
 
-public record UserTelegramRequestDto(
+public record UserTelegramDto(
         Long id,
         Long telegramId,
         String phone,

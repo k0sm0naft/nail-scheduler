@@ -7,5 +7,9 @@ public interface MessageService {
 
     void sendMenu(Long chatId, String text, InlineKeyboardMarkup markup);
 
-    void changeMenu(Long chatId, Integer messageId, String text, InlineKeyboardMarkup markup);
+    void editTextMessage(Long chatId, Integer messageId, String text);
+
+    void editMenu(Long chatId, Integer messageId, String text, InlineKeyboardMarkup markup);
+
+    void deleteMessage(Long chatId, Integer messageId);
 }
