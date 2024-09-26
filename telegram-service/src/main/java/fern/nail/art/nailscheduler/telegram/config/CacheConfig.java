@@ -19,7 +19,7 @@ public class CacheConfig {
                 .cacheWriter(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFactory))
                 .withCacheConfiguration("telegramUserCache",
                         RedisCacheConfiguration.defaultCacheConfig()
-                                               .entryTtl(RedisCacheWriter.TtlFunction.persistent()))
+                                               .entryTtl(Duration.ofDays(1)))
                 .withCacheConfiguration("telegramNewUserCache",
                         RedisCacheConfiguration.defaultCacheConfig()
                                                .entryTtl(Duration.ofMinutes(30)))
