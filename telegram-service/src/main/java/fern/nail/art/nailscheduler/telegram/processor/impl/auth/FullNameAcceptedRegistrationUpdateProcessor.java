@@ -50,7 +50,7 @@ public class FullNameAcceptedRegistrationUpdateProcessor implements UpdateProces
             String text = registrationResult.errorMessage()
                     + localizationService.localize(REPEAT, locale);
             messageService.editMenu(user, user.getMenuId(), text, menu.authentication(locale));
-            userService.saveTempUser(user);
+            userService.saveUser(user);
         }
     }
 }

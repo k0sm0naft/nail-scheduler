@@ -42,7 +42,6 @@ public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
         AuthUser user = (AuthUser) commonUser;
         String text;
         Locale locale = user.getLocale();
-        Integer messageId = user.getMenuId();
 
         user.setRepeatPassword(update.getMessage().getText());
         Optional<String> violations = validationUtil.findViolationsOf(user, locale);
@@ -56,7 +55,8 @@ public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
             text = localizationService.localize(PASSWORD_ACCEPTED, locale)
                     + lineSeparator() + localizationService.localize(ENTER_PHONE, locale);
         }
-        userService.saveTempUser(user);
-        messageService.editTextMessage(user, messageId, text);
+
+        userService.saveUser(user);
+        messageService.editTextMessage(user, user.getMenuId(), text);
     }
 }

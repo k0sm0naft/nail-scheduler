@@ -35,6 +35,6 @@ public class MasterMainMenuUpdateProcessor implements UpdateProcessor {
                 + System.lineSeparator() + "(it is dummy master menu)";
         Integer menuId = messageService.sendTextAndGetId(user, text);
         user.setMenuId(menuId);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
     }
 }

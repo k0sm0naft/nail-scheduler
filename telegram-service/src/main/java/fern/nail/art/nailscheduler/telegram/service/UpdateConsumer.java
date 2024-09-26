@@ -31,11 +31,9 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             }
         }
 
-
         if (update.hasCallbackQuery() && user.getMenuId() == null) {
             user.setMenuId(update.getCallbackQuery().getMessage().getMessageId());
         }
-
 
         eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
     }

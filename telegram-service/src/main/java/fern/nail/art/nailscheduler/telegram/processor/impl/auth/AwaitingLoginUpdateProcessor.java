@@ -10,7 +10,6 @@ import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ public class AwaitingLoginUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
     private final UserService userService;
     private final ValidationUtil validationUtil;
 
@@ -52,7 +50,7 @@ public class AwaitingLoginUpdateProcessor implements UpdateProcessor {
         } else {
             text = localizationService.localize(ENTER_PASSWORD, locale);
             user.setLocalState(LocalState.AWAITING_PASSWORD);
-            userService.saveTempUser(user);
+            userService.saveUser(user);
         }
         messageService.editTextMessage(user, user.getMenuId(), text);
     }

@@ -17,7 +17,6 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
@@ -57,7 +56,7 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
 
     private void handleChangeFirsName(User user) {
         user.setLocalState(LocalState.AWAITING_FIRST_NAME);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
 
         String text = localizationService.localize(ENTER_FIRST_NAME, user.getLocale());
         messageService.editTextMessage(user, user.getMenuId(), text);
@@ -65,7 +64,7 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
 
     private void handleChangeLastName(User user) {
         user.setLocalState(LocalState.AWAITING_LAST_NAME);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
 
         String text = localizationService.localize(ENTER_LAST_NAME, user.getLocale());
         messageService.editTextMessage(user, user.getMenuId(), text);
@@ -73,7 +72,7 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
 
     private void handleSaveFullName(Update update, User user) {
         user.setLocalState(LocalState.FULL_NAME_ACCEPTED);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
         eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
     }
 
@@ -102,7 +101,7 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
                 validationUtil.findViolationsOf(user, "lastName", user.getLocale());
         if (lastNameViolations.isPresent()) {
             user.setLastName(null);
-            userService.saveTempUser(user);
+            userService.saveUser(user);
         }
         return false;
     }

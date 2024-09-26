@@ -29,7 +29,7 @@ public class SendUsernameRequestUpdateProcessor implements UpdateProcessor {
         String text = localizationService.localize(ENTER_LOGIN, user.getLocale());
         user.setLocalState(LocalState.AWAITING_USERNAME);
 
-        userService.saveTempUser(user);
+        userService.saveUser(user);
         messageService.editTextMessage(user, user.getMenuId(), text);
     }
 }

@@ -57,6 +57,6 @@ public class AuthenticationUpdateProcessor implements UpdateProcessor {
 
         Integer menuId = messageService.sendMenuAndGetId(user, text, markup);
         user.setMenuId(menuId);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
     }
 }

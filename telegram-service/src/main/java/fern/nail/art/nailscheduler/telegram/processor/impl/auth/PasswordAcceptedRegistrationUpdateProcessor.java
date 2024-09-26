@@ -38,6 +38,6 @@ public class PasswordAcceptedRegistrationUpdateProcessor implements UpdateProces
         String text = localizationService.localize(PASSWORD_ACCEPTED, locale)
                 + localizationService.localize(REPEAT_PASSWORD, locale);
         messageService.editTextMessage(user, user.getMenuId(), text);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
     }
 }

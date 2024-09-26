@@ -8,11 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public interface UserService {
     User getUser(Update update);
 
-    User saveTempUser(User user);
-
-    User getTempUser(User user);
-
-    void deleteTempUser(User user);
+    User saveUser(User user);
 
     RegistrationResult register(AuthUser user);
 

@@ -9,7 +9,6 @@ import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
-import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
 import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,6 @@ public class PasswordAcceptedLoginUpdateProcessor implements UpdateProcessor {
     private final LocalizationService localizationService;
     private final AuthorizationMenuUtil menu;
     private final UserService userService;
-    private final ValidationUtil validationUtil;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -57,7 +55,7 @@ public class PasswordAcceptedLoginUpdateProcessor implements UpdateProcessor {
                     + localizationService.localize(REPEAT, locale);
             messageService.editMenu(user, user.getMenuId(), text,
                     menu.authentication(locale));
-            userService.saveTempUser(user);
+            userService.saveUser(user);
         }
     }
 }

@@ -21,7 +21,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @RequiredArgsConstructor
 public class AwaitingPasswordUpdateProcessor implements UpdateProcessor {
-    private static final String ENTER_PASSWORD = "message.enter.password";
     private static final String REPEAT = "message.repeat";
 
     private final MessageService messageService;
@@ -53,7 +52,7 @@ public class AwaitingPasswordUpdateProcessor implements UpdateProcessor {
             messageService.editTextMessage(user, user.getMenuId(), text);
         } else {
             user.setLocalState(LocalState.PASSWORD_ACCEPTED);
-            userService.saveTempUser(user);
+            userService.saveUser(user);
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         }
     }

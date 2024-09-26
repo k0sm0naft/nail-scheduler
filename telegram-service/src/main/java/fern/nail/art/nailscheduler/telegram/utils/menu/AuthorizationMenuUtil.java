@@ -31,7 +31,8 @@ public class AuthorizationMenuUtil {
 
     public InlineKeyboardMarkup changeName(Locale locale) {
         InlineKeyboardRow row1 =
-                new InlineKeyboardRow(button.changeFirstName(locale), button.changeLastName(locale));
+                new InlineKeyboardRow(
+                        button.changeFirstName(locale), button.changeLastName(locale));
 
         InlineKeyboardRow row2 =
                 new InlineKeyboardRow(button.confirm(locale));

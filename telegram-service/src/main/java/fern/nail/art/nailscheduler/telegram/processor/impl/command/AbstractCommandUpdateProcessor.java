@@ -28,6 +28,6 @@ public abstract class AbstractCommandUpdateProcessor implements UpdateProcessor 
 
     protected void saveMenuId(User user, Integer menuId, UserService userService) {
         user.setMenuId(menuId);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
     }
 }

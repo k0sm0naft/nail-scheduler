@@ -5,14 +5,12 @@ import fern.nail.art.nailscheduler.telegram.mapper.UserMapper;
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.RegistrationResult;
 import fern.nail.art.nailscheduler.telegram.model.User;
-import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -22,10 +20,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class UserServiceImpl implements UserService {
     private final UserClient userClient;
     private final UserMapper userMapper;
-    private final MessageService messageService;
 
     @Override
-    @Cacheable(value = "telegramUserCache", key = "T(org.telegram.telegrambots.abilitybots.api.util.AbilityUtils).getChatId(#update)")
+    @Cacheable(value = "telegramUserCache",
+            key = "T(org.telegram.telegrambots.abilitybots.api.util.AbilityUtils)"
+                    + ".getChatId(#update)")
     public User getUser(Update update) {
         //todo add real db for telegramUsers
         //todo try get user from db, next try get from api, next create tempUser for reg-on or login
@@ -35,22 +34,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @CachePut(value = "telegramUserCache", key = "#user.telegramId")
-    public User saveTempUser(User user) {
+    public User saveUser(User user) {
         return user;
-    }
-
-    @Override
-    @Cacheable(value = "telegramUserCache", key = "#user.telegramId")
-    public User getTempUser(User user) {
-        return user;
-    }
-
-    @Override
-    @Caching(evict = {
-            @CacheEvict(value = "telegramUserCache", key = "#user.telegramId"),
-            @CacheEvict(value = "telegramNewUserCache", key = "#user.telegramId")
-    })
-    public void deleteTempUser(User user) {
     }
 
     @Override

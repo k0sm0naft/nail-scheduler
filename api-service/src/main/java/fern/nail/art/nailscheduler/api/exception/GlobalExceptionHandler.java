@@ -131,7 +131,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return getResponseEntity(INTERNAL_SERVER_ERROR, ex.getLocalizedMessage());
     }
 
-
     private String getLocalizedMessage(String message) {
         return messageSource.getMessage(message, null, LocaleContextHolder.getLocale());
     }

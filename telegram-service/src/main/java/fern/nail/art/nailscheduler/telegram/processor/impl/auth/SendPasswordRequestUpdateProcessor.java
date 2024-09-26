@@ -29,7 +29,7 @@ public class SendPasswordRequestUpdateProcessor implements UpdateProcessor {
         String text = localizationService.localize(ENTER_PASSWORD, user.getLocale());
         user.setLocalState(LocalState.AWAITING_PASSWORD);
 
-        userService.saveTempUser(user);
+        userService.saveUser(user);
         messageService.editTextMessage(user, user.getMenuId(), text);
     }
 }

@@ -33,6 +33,6 @@ public class ClientMainMenuUpdateProcessor implements UpdateProcessor {
                 + System.lineSeparator() + "(it is dummy client menu)";
         Integer menuId = messageService.sendTextAndGetId(user, text);
         user.setMenuId(menuId);
-        userService.saveTempUser(user);
+        userService.saveUser(user);
     }
 }

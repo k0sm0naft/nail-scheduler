@@ -24,8 +24,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @Component
 @RequiredArgsConstructor
 public class RegistrationUpdateProcessor implements UpdateProcessor {
-    private static final String CHOSE_OPTION = "message.chose.option";
-    private static final String ENTER_LOGIN = "message.enter.login";
     private static final String USE_FOR_LOGIN = "message.use.for.login";
 
     private final UserService userService;
@@ -52,9 +50,10 @@ public class RegistrationUpdateProcessor implements UpdateProcessor {
                 }
                 case SAVE_USERNAME -> saveUsername(update, (AuthUser) user);
                 case CHANGE_USERNAME -> changeUsername(update, user);
+                default -> throw new IllegalStateException("Unexpected callback: " + data);
             }
         }
-        userService.saveTempUser(user);
+        userService.saveUser(user);
     }
 
     private void saveUsername(Update update, AuthUser user) {

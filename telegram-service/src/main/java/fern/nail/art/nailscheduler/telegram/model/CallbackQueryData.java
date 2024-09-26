@@ -10,7 +10,7 @@ public enum CallbackQueryData {
     LOGIN("login"),
     REGISTRATION("registration"),
     SAVE_USERNAME("saveUsername"),
-    CHANGE_USERNAME( "changeUsername"),
+    CHANGE_USERNAME("changeUsername"),
     CHANGE_FIRST_NAME("changeFirstName"),
     CHANGE_LAST_NAME("changeLastName"),
     SAVE_FULL_NAME("saveFullName");

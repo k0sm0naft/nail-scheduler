@@ -56,7 +56,7 @@ public class AwaitingNameUpdateProcessor implements UpdateProcessor {
             messageService.editMenu(user, user.getMenuId(), text, markup);
         } else {
             user.setLocalState(LocalState.SEND_NAME_REQUEST);
-            userService.saveTempUser(user);
+            userService.saveUser(user);
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         }
     }
