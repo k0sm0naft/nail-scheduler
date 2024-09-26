@@ -3,15 +3,16 @@ package fern.nail.art.nailscheduler.telegram.model;
 import java.io.Serializable;
 import java.util.Locale;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-public class User implements Serializable {
+@Builder()
+@EqualsAndHashCode
+public sealed class User implements Serializable permits LoginUser {
     private Long telegramId;
-    private Long chatId;
     private Long userId;
     private String firstName;
     private String lastName;

@@ -1,14 +1,23 @@
 package fern.nail.art.nailscheduler.telegram.service;
 
+import fern.nail.art.nailscheduler.telegram.model.LoginUser;
+import fern.nail.art.nailscheduler.telegram.model.RegisterUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
+import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 public interface UserService {
-    User getUser(Update chatId);
+    User getUser(Update update);
 
-    User saveTelegramUser(User user);
+    User saveTempUser(User user);
 
-    Object registerUser(User user);
+    User getTempUser(User user);
 
-    boolean authenticateUser(String username, String password);
+    @Cacheable(value = "telegramNewUserCache", key = "#user.telegramId")
+    void deleteTempUser(User user);
+
+    Optional<User> registerUser(RegisterUser user);
+
+    boolean authenticateUser(LoginUser user);
 }

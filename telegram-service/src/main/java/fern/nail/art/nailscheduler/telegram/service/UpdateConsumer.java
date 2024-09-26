@@ -4,10 +4,8 @@ import fern.nail.art.nailscheduler.telegram.handler.impl.ClientVisitHandler;
 import fern.nail.art.nailscheduler.telegram.handler.impl.FirstVisitHandler;
 import fern.nail.art.nailscheduler.telegram.handler.impl.MasterVisitHandler;
 import fern.nail.art.nailscheduler.telegram.model.User;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -24,6 +22,11 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     @Override
     public void consume(Update update) {
         User user = userService.getUser(update);
+        if (update.getMessage() != null
+                && update.getMessage().getText() != null
+                && update.getMessage().getText().startsWith("/start")) {
+            userService.deleteTempUser(user);
+        }
 
         switch (user.getRole()) {
             case UNKNOWN -> firstVisitHandler.handleUpdate(update, user);

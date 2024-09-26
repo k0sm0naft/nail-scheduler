@@ -1,18 +1,20 @@
 package fern.nail.art.nailscheduler.telegram.mapper;
 
-import fern.nail.art.nailscheduler.telegram.dto.UserTelegramRequestDto;
+import fern.nail.art.nailscheduler.telegram.dto.UserTelegramDto;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 public class UserMapper {
 
-    public Optional<User> dtoToUser(UserTelegramRequestDto dto) {
-        if (dto == null) {
+    public Optional<User> dtoToUser(UserTelegramDto dto) {
+        if (dto.telegramId() == null) {
             return Optional.empty();
         }
+
         return Optional.of(User.builder()
                                .userId(dto.id())
                                .telegramId(dto.telegramId())
@@ -32,9 +34,17 @@ public class UserMapper {
                    .build();
     }
 
+    public User createTempUser(User user, Update update) {
+        user.setRole(User.Role.UNKNOWN);
+        return user;
+    }
 
     private static User.Role mapToRole(String role) {
-        return switch (role.toUpperCase()) {
+        if (role == null) {
+            return User.Role.UNKNOWN;
+        }
+
+        return switch (role) {
             case "CLIENT" -> User.Role.CLIENT;
             case "MASTER" -> User.Role.MASTER;
             default -> User.Role.UNKNOWN;
