@@ -1,7 +1,6 @@
 package fern.nail.art.nailscheduler.telegram.menu;
 
 import fern.nail.art.nailscheduler.telegram.model.Command;
-import java.util.List;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
