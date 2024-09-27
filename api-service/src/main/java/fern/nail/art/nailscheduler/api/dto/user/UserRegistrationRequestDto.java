@@ -14,6 +14,7 @@ public record UserRegistrationRequestDto(
         String username,
 
         @NotBlank
+        //todo create annotation for password with pattern and set message
         @Length(min = 8, max = 24)
         String password,
 

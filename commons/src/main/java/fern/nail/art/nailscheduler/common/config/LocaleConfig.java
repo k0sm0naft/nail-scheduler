@@ -1,18 +1,18 @@
 package fern.nail.art.nailscheduler.common.config;
 
 import java.util.Locale;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
-@Configuration
+@AutoConfiguration
 public class LocaleConfig {
 
     @Bean
-    public LocaleResolver localeResolver() {
+    public LocaleResolver commonLocaleResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
         localeResolver.setDefaultLocale(Locale.getDefault());
         return localeResolver;

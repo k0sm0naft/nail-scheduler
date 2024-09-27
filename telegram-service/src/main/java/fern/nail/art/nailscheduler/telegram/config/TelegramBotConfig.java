@@ -21,7 +21,7 @@ public class TelegramBotConfig {
     }
 
     @Bean
-    public BotSession registerBot(@Value("${telegram.bot.token}") String botToken) throws Exception {
+    public BotSession botSession(@Value("${telegram.bot.token}") String botToken) throws Exception {
         try {
             return new TelegramBotsLongPollingApplication().registerBot(botToken, updateConsumer);
         } catch (Exception e) {

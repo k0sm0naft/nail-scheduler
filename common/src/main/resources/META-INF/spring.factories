@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  fern.nail.art.nailscheduler.common.config.LocaleConfig

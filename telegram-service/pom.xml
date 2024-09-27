@@ -16,19 +16,16 @@
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-abilities</artifactId>
-            <version>7.10.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-longpolling</artifactId>
-            <version>7.10.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots-client</artifactId>
-            <version>7.10.0</version>
         </dependency>
 
         <dependency>
@@ -44,6 +41,21 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fern.nail.art</groupId>
+            <artifactId>commons</artifactId>
         </dependency>
     </dependencies>
 </project>
