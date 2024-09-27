@@ -19,7 +19,7 @@ public class LocaleConfig {
     }
 
     @Bean
-    public MessageSource messageSource() {
+    public MessageSource commonMessageSource() {
         ReloadableResourceBundleMessageSource messageSource =
                 new ReloadableResourceBundleMessageSource();
         messageSource.setBasename("classpath:i18n/messages");
