@@ -18,8 +18,8 @@ public class UserMapper {
         return Optional.of(User.builder()
                                .userId(dto.id())
                                .telegramId(dto.telegramId())
-                               .firstName(dto.firstName())
-                               .lastName(dto.lastName())
+                               .firstName(normalizeName(dto.firstName()))
+                               .lastName(normalizeName(dto.lastName()))
                                .role(mapToRole(dto.role()))
                                .phone(dto.phone())
                                .build());
@@ -39,7 +39,7 @@ public class UserMapper {
         return user;
     }
 
-    private static User.Role mapToRole(String role) {
+    private User.Role mapToRole(String role) {
         if (role == null) {
             return User.Role.UNKNOWN;
         }
@@ -49,5 +49,20 @@ public class UserMapper {
             case "MASTER" -> User.Role.MASTER;
             default -> User.Role.UNKNOWN;
         };
+    }
+
+    private String normalizeName(String name) {
+        if (name == null) {
+            return null;
+        }
+        String cleanedName = name.replaceAll("[^a-zA-Zа-яА-Я]", "");
+
+        if (cleanedName.length() < 3) {
+            cleanedName = String.format("%-3s", cleanedName).replace(' ', 'a');
+        } else if (cleanedName.length() > 24) {
+            cleanedName = cleanedName.substring(0, 24);
+        }
+
+        return cleanedName.substring(0, 1).toUpperCase() + cleanedName.substring(1).toLowerCase();
     }
 }

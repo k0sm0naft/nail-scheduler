@@ -2,21 +2,18 @@ package fern.nail.art.nailscheduler.common.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import jakarta.validation.constraints.Pattern;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.hibernate.validator.constraints.Length;
 
 @Constraint(validatedBy = {})
 @Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-@Pattern(
-    regexp = "^(\\+?\\d{2})?(\\(\\d{3}\\)|\\d{3})[-.\\s]*\\d{3}[-.\\s]*\\d{2,4}[-.\\s]*\\d{2,4}$",
-    message = "{validation.phone.invalid}"
-)
-public @interface Phone {
-    String message() default "Invalid phone number";
+@Length(min = 8, max = 24, message = "{validation.password.invalid}")
+public @interface Password {
+    String message() default "Invalid password";
 
     Class<?>[] groups() default {};
 

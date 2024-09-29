@@ -18,7 +18,7 @@ public class LocaleConfig {
         return localeResolver;
     }
 
-    @Bean
+    @Bean(name = "commonMessageSource")
     public MessageSource commonMessageSource() {
         ReloadableResourceBundleMessageSource messageSource =
                 new ReloadableResourceBundleMessageSource();

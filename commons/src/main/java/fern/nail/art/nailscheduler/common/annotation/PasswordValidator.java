@@ -28,7 +28,8 @@ public class PasswordValidator implements ConstraintValidator<PasswordMatchValid
                     .getReadMethod()
                     .invoke(dto);
 
-            return Objects.equals(fieldValue, fieldMatchValue);
+            return fieldMatch == null || fieldMatchValue == null
+                    || Objects.equals(fieldValue, fieldMatchValue);
         } catch (Exception e) {
             return false;
         }

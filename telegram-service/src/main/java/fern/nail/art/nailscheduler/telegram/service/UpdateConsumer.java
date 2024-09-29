@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +23,10 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     @Override
     public void consume(Update update) {
         User user = userService.getUser(update);
-        if (update.getMessage() != null
-                && update.getMessage().getText() != null
-                && update.getMessage().getText().startsWith("/start")) {
+        Message message = update.getMessage();
+        if (message != null
+                && message.getText() != null
+                && message.getText().startsWith("/start")) {
             userService.deleteTempUser(user);
         }
 

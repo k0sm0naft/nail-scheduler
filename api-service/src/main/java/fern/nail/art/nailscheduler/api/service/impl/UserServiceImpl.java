@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @CachePut(value = "userCache", key = "#result.id")
     public User register(User user) {
-        validateUsername(user.getUsername().toLowerCase());
+        validateUsername(user.getUsername());
         validatePhone(user);
         user.setRoles(Set.of(roleRepository.getByName(Role.RoleName.ROLE_CLIENT)));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
