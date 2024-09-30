@@ -1,324 +1,319 @@
 package fern.nail.art.nailscheduler.telegram.handler.impl;
 
+import static java.lang.System.lineSeparator;
+
 import fern.nail.art.nailscheduler.telegram.handler.UpdateHandler;
 import fern.nail.art.nailscheduler.telegram.model.LoginUser;
 import fern.nail.art.nailscheduler.telegram.model.RegisterUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
+import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
+import fern.nail.art.nailscheduler.telegram.utils.Command;
+import fern.nail.art.nailscheduler.telegram.utils.AuthorizationMenuUtil;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.abilitybots.api.util.AbilityUtils;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.MaybeInaccessibleMessage;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 @Service
 @RequiredArgsConstructor
 public class FirstVisitHandler implements UpdateHandler {
+    private static final String CHOSE_OPTION = "message.chose.option";
+    private static final String USE_FOR_LOGIN = "message.use.for.login";
+    private static final String ENTER_LOGIN = "message.enter.login";
+    private static final String ENTER_PASSWORD = "message.enter.password";
+    private static final String ENTER_PHONE = "message.enter.phone";
+    private static final String ENTER_FIRST_NAME = "message.enter.first.name";
+    private static final String ENTER_LAST_NAME = "message.enter.last.name";
+    private static final String PASSWORD_ACCEPTED = "message.password.accepted";
+    private static final String REPEAT_PASSWORD = "message.repeat.password";
+    private static final String REPEAT = "message.repeat";
+    private static final String CHANGE_NAMES = "message.change.names";
+    private static final String WRONG_CREDENTIALS = "message.wrong.credentials";
+    private static final String UNKNOWN_COMMAND = "message.unknown.command";
+    private static final String MISTAKE_OCCURS = "message.mistake.occurs";
+    private static final String HELLO = "message.hello";
+    private static final String VALUE_MISSING = "---";
+    private static final String START_COMMAND = "/start";
+    private final AuthorizationMenuUtil menu;
     private final ValidationUtil validationUtil;
     private final MessageService messageService;
     private final UserService userService;
+    private final LocalizationService localizationService;
 
     @Override
     public void handleUpdate(Update update, User user) {
+        CallbackQuery query = update.getCallbackQuery();
+        Message message = update.getMessage();
         user = userService.getTempUser(user);
 
-        if (update.getCallbackQuery() != null) {
-            handleQuery(update, user);
+        if (query != null) {
+            handleQuery(query, user);
             return;
         }
 
-        if (user instanceof RegisterUser registerUser && update.getMessage() != null) {
-            handleRegistration(update, registerUser);
-            return;
+        if (message != null) {
+            handleMessage(message, user);
         }
-
-        if (user instanceof LoginUser loginUser && update.getMessage() != null) {
-            handleAuthorization(update, loginUser);
-            return;
-        }
-
-        messageService.deleteMessage(user.getTelegramId(), update.getMessage().getMessageId());
-        messageService.sendMenu(user.getTelegramId(), "Вы у нас впервые?" + System.lineSeparator()
-                + "Выберите действие:", getFirstButtons());
     }
 
-    private void handleQuery(Update update, User user) {
-        CallbackQuery query = update.getCallbackQuery();
-        switch (query.getData()) {
-            case "login" -> {
-                userService.saveTempUser(new LoginUser(user));
-                messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(),
-                        "Введите логин:", getToBeginningButton());
+    private void handleMessage(Message message, User user) {
+        if (message.getText() != null && message.getText().startsWith(START_COMMAND)) {
+            handleStart(user, message);
+            return;
+        }
+
+        if (user instanceof RegisterUser registerUser && registerUser.getPassword() != null) {
+            handleRegistration(message, registerUser);
+            return;
+        }
+
+        if (user instanceof LoginUser loginUser) {
+            handleAuthorization(message, loginUser);
+        }
+    }
+
+    private void handleStart(User user, MaybeInaccessibleMessage message) {
+        userService.deleteTempUser(user);
+        messageService.deleteMessage(user, message.getMessageId());
+        String text = localizationService.localize(
+                localizationService.localize(CHOSE_OPTION, user.getLocale()), user.getLocale());
+        messageService.sendMenu(user, text, menu.registration(user.getLocale()));
+    }
+
+    private void handleQuery(CallbackQuery query, User user) {
+        String text;
+        Integer messageId = query.getMessage().getMessageId();
+        Locale locale = user.getLocale();
+
+        switch (Command.fromString(query.getData())) {
+            case MAIN -> {
+                handleStart(user, query.getMessage());
+                return;
             }
-            case "register" -> {
-                RegisterUser registerUser = new RegisterUser(user);
-                userService.saveTempUser(registerUser);
-                String telegramUsername = AbilityUtils.getUser(update).getUserName();
-                registerUser.setUsername(telegramUsername);
-                Optional<String> violations =
-                        validationUtil.findViolationsOf(registerUser, user.getLocale());
-                if (violations.isPresent()) {
-                    messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(),
-                            "Введите логин:", getToBeginningButton());
-                } else {
-                    messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(),
-                            "Использовать для логина \"%s\"".formatted(telegramUsername),
-                            getSaveTelegramUsernameButtons());
-                }
+
+            case LOGIN -> {
+                user = new LoginUser(user);
+                sendMessageEnterLogin(user, messageId, locale);
             }
-            case "saveUsername" -> {
-                RegisterUser registerUser = (RegisterUser) user;
-                registerUser.setUsername(AbilityUtils.getUser(update).getUserName());
-                userService.saveTempUser(user);
-                messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(),
-                        "Логин: %s%sВведите пароль:".formatted(registerUser.getUsername(), System.lineSeparator()), getToBeginningButton()); }
-            case "changeUsername" -> messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(),
-                    "Введите логин:", getToBeginningButton());
-            case "changeFirstName" -> {
+
+            case REGISTER -> {
+                user = new RegisterUser(user);
+                handleRegister(query, (RegisterUser) user);
+            }
+
+            case SAVE_USERNAME -> handleSaveUsername((RegisterUser) user, query);
+
+            case CHANGE_USERNAME -> {
+                ((RegisterUser) user).setUsername(null);
+                sendMessageEnterLogin(user, messageId, locale);
+            }
+
+            case CHANGE_FIRST_NAME -> {
                 user.setFirstName(null);
-                userService.saveTempUser(user);
-                messageService.editTextMessage(user.getTelegramId(),
-                        query.getMessage().getMessageId(), "Введите имя:");
+                text = localizationService.localize(ENTER_FIRST_NAME, locale);
+                messageService.editTextMessage(user, messageId, text);
             }
-            case "changeLastName" -> {
+
+            case CHANGE_LAST_NAME -> {
                 user.setLastName(null);
-                userService.saveTempUser(user);
-                messageService.editTextMessage(user.getTelegramId(),
-                        query.getMessage().getMessageId(), "Введите фамилию:");
+                text = localizationService.localize(ENTER_LAST_NAME, locale);
+                messageService.editTextMessage(user, messageId, text);
             }
-            case "registration" -> tryRegistration(user, update);
-            case "toStart" -> {
-                userService.deleteTempUser(user);
-                messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(),
-                        "Сделайте выбор:", getFirstButtons());
+
+            case REGISTRATION -> tryRegistration(user);
+
+            default -> {
+                text = localizationService.localize(UNKNOWN_COMMAND, locale)
+                        + localizationService.localize(REPEAT, locale);
+                messageService.editMenu(user, messageId, text, menu.registration(locale));
             }
-            default -> messageService.editMenu(user.getTelegramId(), query.getMessage().getMessageId(), "Неизвестная команда. Попробуйте снова:", getFirstButtons());
         }
+
+        userService.saveTempUser(user);
     }
 
-    private void handleAuthorization(Update update, LoginUser user) {
+    private void handleAuthorization(Message message, LoginUser user) {
         if (user.getUsername() == null) {
-            setUsername(user, update);
-        } else {
-            setPassword(user, update);
-        }
-    }
-
-    private void handleRegistration(Update update, RegisterUser user) {
-        if (user.getUsername() == null) {
-            setUsername(user, update);
+            setUsername(user, message);
         } else if (user.getPassword() == null) {
-            setPassword(user, update);
-        } else if (user.getRepeatPassword() == null) {
-            setRepeatPassword(user, update);
+            setPassword(user, message);
+        }
+    }
+
+    private void handleRegistration(Message message, RegisterUser user) {
+        if (user.getRepeatPassword() == null) {
+            setRepeatPassword(user, message);
         } else if (user.getPhone() == null) {
-            setPhone(user, update);
+            setPhone(user, message);
         } else if (user.getFirstName() == null) {
-            setFirstName(user, update);
-        } else {
-            setLastName(user, update);
+            setFirstName(user, message);
+        } else if (user.getLastName() == null) {
+            setLastName(user, message);
         }
     }
 
-    private static InlineKeyboardMarkup getToBeginningButton() {
-        InlineKeyboardButton toBeginningButton =
-                InlineKeyboardButton.builder()
-                                    .text("Вернуться к началу")
-                                    .callbackData("toStart")
-                                    .build();
-        return InlineKeyboardMarkup.builder()
-                                   .keyboardRow(new InlineKeyboardRow(toBeginningButton))
-                                   .build();
-    }
+    private void handleRegister(CallbackQuery query, RegisterUser user) {
+        String username = query.getFrom().getUserName();
+        Locale locale = user.getLocale();
+        Integer messageId = query.getMessage().getMessageId();
 
-    private InlineKeyboardMarkup getSaveTelegramUsernameButtons() {
-        InlineKeyboardButton saveUsername =
-                InlineKeyboardButton.builder()
-                                    .text("Использовать")
-                                    .callbackData("saveUsername")
-                                    .build();
-        InlineKeyboardButton changeUsername =
-                InlineKeyboardButton.builder()
-                                    .text("Изменить")
-                                    .callbackData("changeUsername")
-                                    .build();
-        InlineKeyboardButton toBeginningButton =
-                InlineKeyboardButton.builder()
-                                    .text("Вернуться к началу")
-                                    .callbackData("toStart")
-                                    .build();
-        return InlineKeyboardMarkup.builder()
-                                   .keyboardRow(new InlineKeyboardRow(saveUsername, changeUsername))
-                                   .keyboardRow(new InlineKeyboardRow(toBeginningButton))
-                                   .build();
-    }
-
-    private static InlineKeyboardMarkup getFirstButtons() {
-        InlineKeyboardButton registerButton =
-                InlineKeyboardButton.builder()
-                                    .text("Зарегистрироваться")
-                                    .callbackData("register")
-                                    .build();
-        InlineKeyboardButton loginButton =
-                InlineKeyboardButton.builder()
-                                    .text("Войти")
-                                    .callbackData("login")
-                                    .build();
-        return InlineKeyboardMarkup.builder()
-                                   .keyboardRow(new InlineKeyboardRow(registerButton, loginButton))
-                                   .build();
-    }
-
-    private static InlineKeyboardMarkup getChangeNameButtons(User user) {
-        InlineKeyboardButton registerButton =
-                InlineKeyboardButton.builder()
-                                    .text("Изменить имя" + System.lineSeparator() + '('
-                                            + user.getFirstName() + ')')
-                                    .callbackData("changeFirstName")
-                                    .build();
-        InlineKeyboardButton loginButton =
-                InlineKeyboardButton.builder()
-                                    .text("Изменить фамилию" + System.lineSeparator() + '('
-                                            + user.getFirstName() + ')')
-                                    .callbackData("changeLastName")
-                                    .build();
-        InlineKeyboardButton save =
-                InlineKeyboardButton.builder()
-                                    .text("Сохранить")
-                                    .callbackData("registration")
-                                    .build();
-        InlineKeyboardButton toBeginningButton =
-                InlineKeyboardButton.builder()
-                                    .text("Вернуться к началу")
-                                    .callbackData("toStart")
-                                    .build();
-        return InlineKeyboardMarkup.builder()
-                                   .keyboardRow(new InlineKeyboardRow(registerButton, loginButton))
-                                   .keyboardRow(new InlineKeyboardRow(save, toBeginningButton))
-                                   .build();
-    }
-
-    private void setUsername(LoginUser user, Update update) {
-        user.setUsername(update.getMessage().getText());
-        Optional<String> violations = validationUtil.findViolationsOf(user, user.getLocale());
+        user.setUsername(username);
+        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
         if (violations.isPresent()) {
-            messageService.sendMenu(user.getTelegramId(),
-                    violations.get() + System.lineSeparator() + "Повторите попытку:",
-                    getToBeginningButton());
+            sendMessageEnterLogin(user, messageId, locale);
         } else {
+            messageService.editMenu(user,
+                    messageId, localizationService.localize(USE_FOR_LOGIN, locale)
+                                                  .formatted(username), menu.saveUsername(locale));
+        }
+    }
+
+    private void handleSaveUsername(RegisterUser user, CallbackQuery query) {
+        Integer messageId = query.getMessage().getMessageId();
+        Locale locale = user.getLocale();
+
+        String text = localizationService.localize(ENTER_PASSWORD, locale);
+        messageService.editMenu(user, messageId, text, menu.beckToMainButton(locale));
+    }
+
+    private void setUsername(LoginUser user, Message message) {
+        String text;
+        Locale locale = user.getLocale();
+
+        user.setUsername(message.getText());
+
+        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
+        if (violations.isPresent()) {
+            text = violations.get() + lineSeparator()
+                    + localizationService.localize(REPEAT, locale);
+            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
+        } else {
+            messageService.sendMenu(user,
+                    localizationService.localize(ENTER_PASSWORD, locale),
+                    menu.beckToMainButton(locale));
             userService.saveTempUser(user);
-            messageService.sendMenu(user.getTelegramId(), "Введите пароль:",
-                    getToBeginningButton());
         }
     }
 
-    private void setPassword(LoginUser user, Update update) {
-        user.setPassword(update.getMessage().getText());
-        messageService.deleteMessage(user.getTelegramId(), update.getMessage().getMessageId());
-        Optional<String> violations = validationUtil.findViolationsOf(user, user.getLocale());
+    private void setPassword(LoginUser user, Message message) {
+        String text;
+        Locale locale = user.getLocale();
+        Integer messageId = message.getMessageId();
+
+        messageService.deleteMessage(user, messageId);
+        user.setPassword(message.getText());
+
+        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
         if (violations.isPresent()) {
-            messageService.sendMenu(user.getTelegramId(),
-                    violations.get() + System.lineSeparator() + "Повторите попытку:",
-                    getToBeginningButton());
+            text = violations.get() + lineSeparator()
+                    + localizationService.localize(REPEAT, locale);
+            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
         } else {
             if (user instanceof RegisterUser registerUser) {
-                messageService.sendMenu(user.getTelegramId(), "Пароль принят. Повторите пароль:",
-                        getToBeginningButton());
+                text = localizationService.localize(PASSWORD_ACCEPTED, locale)
+                        + localizationService.localize(REPEAT_PASSWORD, locale);
+                messageService.sendMenu(user, text, menu.beckToMainButton(locale));
                 userService.saveTempUser(registerUser);
             } else {
                 boolean isAuthenticated = userService.authenticateUser(user);
                 if (isAuthenticated) {
-                    InlineKeyboardMarkup mainMenu =
-                            new ClientVisitHandler(messageService).getMainMenu();
-                    messageService.editMenu(user.getTelegramId(),
-                            update.getMessage().getMessageId() - 1,
-                            "Здравствуй, %s".formatted(user.getFirstName()), mainMenu);
+                    text = localizationService.localize(HELLO, locale)
+                                              .formatted(user.getFirstName());
+                    messageService.editMenu(user, messageId - 1, text,
+                            menu.beckToMainButton(locale));
                 } else {
-                    messageService.editMenu(user.getTelegramId(), update.getMessage().getMessageId() - 1,
-                            "Неправильный пароль или логин. Попробуйте еще раз:",
-                            getFirstButtons());
+                    text = localizationService.localize(WRONG_CREDENTIALS, locale)
+                            + localizationService.localize(REPEAT, locale);
+                    messageService.editMenu(user, messageId - 1, text,
+                            menu.registration(locale));
                 }
                 userService.deleteTempUser(user);
             }
         }
     }
 
-    private void setRepeatPassword(RegisterUser user, Update update) {
-        String text = update.getMessage().getText();
-        messageService.deleteMessage(user.getTelegramId(), update.getMessage().getMessageId());
-        Optional<String> violations = validationUtil.findViolationsOf(user, user.getLocale());
+    private void setRepeatPassword(RegisterUser user, Message message) {
+        String text;
+        Locale locale = user.getLocale();
+        Integer messageId = message.getMessageId();
+        messageService.deleteMessage(user, messageId);
+        user.setRepeatPassword(message.getText());
+
+        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
         if (violations.isPresent()) {
-            messageService.sendMenu(user.getTelegramId(),
-                    violations.get() + System.lineSeparator() + "Повторите попытку:",
-                    getToBeginningButton());
+            user.setPassword(null);
+            user.setRepeatPassword(null);
+            text = violations.get() + lineSeparator()
+                     + localizationService.localize(REPEAT, locale);
+            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
         } else {
-            user.setRepeatPassword(text);
+            text = localizationService.localize(PASSWORD_ACCEPTED, locale)
+                    + lineSeparator() + localizationService.localize(ENTER_PHONE, locale);
+            messageService.editMenu(user, messageId - 1, text,
+                    menu.beckToMainButton(locale));
+        }
+        userService.saveTempUser(user);
+    }
+
+    private void setPhone(RegisterUser user, Message message) {
+        user.setPhone(message.getText());
+        handleLastStage(user, menu.beckToMainButton(user.getLocale()));
+    }
+
+    private void setFirstName(User user, Message message) {
+        user.setFirstName(message.getText());
+        handleLastStage(user, menu.changeName(user.getLocale()));
+    }
+
+    private void setLastName(User user, Message message) {
+        user.setLastName(message.getText());
+        handleLastStage(user, menu.changeName(user.getLocale()));
+    }
+
+    private void handleLastStage(User user, InlineKeyboardMarkup failMenu) {
+        String text;
+        Locale locale = user.getLocale();
+
+        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
+        if (violations.isPresent()) {
+            text = violations.get() + lineSeparator()
+                    + localizationService.localize(REPEAT, locale);
+            messageService.sendMenu(user, text, failMenu);
+        } else {
             userService.saveTempUser(user);
-            messageService.editMenu(user.getTelegramId(), update.getMessage().getMessageId() - 1,
-                    "Пароль принят." + System.lineSeparator() + "Введите телефон:",
-                    getToBeginningButton());
+            String lastName = user.getLastName() == null ? VALUE_MISSING : user.getLastName();
+            text = localizationService.localize(CHANGE_NAMES, locale)
+                                      .formatted(lineSeparator(), user.getFirstName(), lastName);
+            messageService.sendMenu(user, text, menu.changeName(locale));
         }
     }
 
-    private void setPhone(RegisterUser user, Update update) {
-        user.setPhone(update.getMessage().getText());
-        Optional<String> violations = validationUtil.findViolationsOf(user, user.getLocale());
-        if (violations.isPresent()) {
-            messageService.sendMenu(user.getTelegramId(),
-                    violations.get() + System.lineSeparator() + "Повторите попытку:",
-                    getToBeginningButton());
-        } else {
-            userService.saveTempUser(user);
-            messageService.sendMenu(user.getTelegramId(),
-                    "Поменять имя/фамилию?", getChangeNameButtons(user));
-        }
-    }
+    private void tryRegistration(User user) {
+        String text;
+        Locale locale = user.getLocale();
 
-    private void setFirstName(User user, Update update) {
-        user.setFirstName(update.getMessage().getText());
-        Optional<String> violations = validationUtil.findViolationsOf(user, user.getLocale());
-        if (violations.isPresent()) {
-            messageService.sendMenu(user.getTelegramId(),
-                    violations.get() + System.lineSeparator() + "Повторите попытку:",
-                    getChangeNameButtons(user));
-        } else {
-            messageService.sendMenu(user.getTelegramId(),
-                    "Поменять имя/фамилию?", getChangeNameButtons(user));
-            userService.saveTempUser(user);
-        }
-    }
-
-    private void setLastName(User user, Update update) {
-        user.setLastName(update.getMessage().getText());
-        Optional<String> violations = validationUtil.findViolationsOf(user, user.getLocale());
-        if (violations.isPresent()) {
-            messageService.sendMenu(user.getTelegramId(),
-                    violations.get() + System.lineSeparator() + "Повторите попытку:",
-                    getChangeNameButtons(user));
-        } else {
-            messageService.sendMenu(user.getTelegramId(),
-                    "Поменять имя/фамилию?", getChangeNameButtons(user));
-            userService.saveTempUser(user);
-        }
-    }
-
-    private void tryRegistration(User user, Update update) {
         Optional<User> optionalUser = userService.registerUser((RegisterUser) user);
         if (optionalUser.isPresent()) {
-            InlineKeyboardMarkup mainMenu =
-                    new ClientVisitHandler(messageService).getMainMenu();
-            messageService.sendMenu(user.getTelegramId(),
-                    "Здравствуй, %s".formatted(user.getFirstName()), mainMenu);
+            text = localizationService.localize(HELLO, locale).formatted(user.getFirstName());
+            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
         } else {
-            messageService.sendMenu(user.getTelegramId(),
-                    "Произошла ошибка. Попробовать еще?", getFirstButtons());
+            text = localizationService.localize(MISTAKE_OCCURS, locale)
+                    + localizationService.localize(REPEAT, locale);
+            messageService.sendMenu(user, text, menu.registration(locale));
         }
         userService.deleteTempUser(user);
+    }
+
+    private void sendMessageEnterLogin(User user, Integer messageId, Locale locale) {
+        messageService.editMenu(user, messageId,
+                localizationService.localize(ENTER_LOGIN, locale), menu.beckToMainButton(locale));
     }
 }

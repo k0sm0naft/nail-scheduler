@@ -101,11 +101,9 @@ public class UserClient {
                                             if (error instanceof List) {
                                                 List<String> errors = (List<String>) error;
                                                 errors.forEach(
-                                                        e -> messageService.sendText(
-                                                                user.getTelegramId(), e));
+                                                        e -> messageService.sendText(user, e));
                                             } else if (error instanceof String singleError) {
-                                                messageService.sendText(user.getTelegramId(),
-                                                        singleError);
+                                                messageService.sendText(user, singleError);
                                             }
                                             return Mono.empty();
                                         })

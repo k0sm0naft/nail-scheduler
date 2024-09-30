@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target({TYPE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface PasswordMatchValidator {
-    String message() default "{validation.password_match}";
+    String message() default "{validation.password.match}";
     String field();
     String fieldMatch();
     Class<?>[] groups() default {};
