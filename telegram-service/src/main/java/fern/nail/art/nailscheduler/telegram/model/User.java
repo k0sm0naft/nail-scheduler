@@ -4,7 +4,6 @@ import fern.nail.art.nailscheduler.common.annotation.Name;
 import fern.nail.art.nailscheduler.common.annotation.Phone;
 import java.io.Serializable;
 import java.util.Locale;
-import java.util.Stack;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,6 +24,7 @@ public sealed class User implements Serializable permits LoginUser {
     private String phone;
     private Locale locale;
     private Role role;
+    private Integer menuId;
 
     public enum Role {
         CLIENT,

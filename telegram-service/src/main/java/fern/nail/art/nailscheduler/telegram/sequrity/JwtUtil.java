@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.telegram.sequrity;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
@@ -22,7 +23,12 @@ public class JwtUtil {
         this.secret = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
     }
 
-    @Scheduled(initialDelayString = "PT1S", fixedRateString = "PT59M")
+    @PostConstruct
+    protected void initToken() {
+        generateToken();
+    }
+
+    @Scheduled(fixedRateString = "PT59M")
     protected void generateToken() {
         token = Jwts.builder()
                     .claim("roles", List.of("ROLE_MASTER"))

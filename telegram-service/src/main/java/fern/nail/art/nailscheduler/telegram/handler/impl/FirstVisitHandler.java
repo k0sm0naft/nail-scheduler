@@ -10,8 +10,8 @@ import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.Command;
-import fern.nail.art.nailscheduler.telegram.utils.AuthorizationMenuUtil;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
+import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -60,16 +60,16 @@ public class FirstVisitHandler implements UpdateHandler {
         }
 
         if (message != null) {
-            handleMessage(message, user);
+            if (message.getText() != null && message.getText().startsWith(START_COMMAND)) {
+                handleStart(user, message);
+            } else {
+                handleMessage(message, user);
+            }
+            messageService.deleteMessage(user, message.getMessageId());
         }
     }
 
     private void handleMessage(Message message, User user) {
-        if (message.getText() != null && message.getText().startsWith(START_COMMAND)) {
-            handleStart(user, message);
-            return;
-        }
-
         if (user instanceof RegisterUser registerUser && registerUser.getPassword() != null) {
             handleRegistration(message, registerUser);
             return;
@@ -81,27 +81,31 @@ public class FirstVisitHandler implements UpdateHandler {
     }
 
     private void handleStart(User user, MaybeInaccessibleMessage message) {
-        userService.deleteTempUser(user);
-        messageService.deleteMessage(user, message.getMessageId());
-        String text = localizationService.localize(
+        String text = getStartText(user);
+        InlineKeyboardMarkup authMenu = menu.registration(user.getLocale());
+        messageService.sendMenu(user, text, authMenu);
+    }
+
+    private String getStartText(User user) {
+        return localizationService.localize(
                 localizationService.localize(CHOSE_OPTION, user.getLocale()), user.getLocale());
-        messageService.sendMenu(user, text, menu.registration(user.getLocale()));
     }
 
     private void handleQuery(CallbackQuery query, User user) {
         String text;
         Integer messageId = query.getMessage().getMessageId();
         Locale locale = user.getLocale();
+        user.setMenuId(messageId);
 
         switch (Command.fromString(query.getData())) {
             case MAIN -> {
-                handleStart(user, query.getMessage());
-                return;
+                messageService.editMenu(user, messageId, getStartText(user),
+                        menu.registration(user.getLocale()));
             }
 
             case LOGIN -> {
                 user = new LoginUser(user);
-                sendMessageEnterLogin(user, messageId, locale);
+                editMessageOnEnterLogin(user);
             }
 
             case REGISTER -> {
@@ -113,7 +117,7 @@ public class FirstVisitHandler implements UpdateHandler {
 
             case CHANGE_USERNAME -> {
                 ((RegisterUser) user).setUsername(null);
-                sendMessageEnterLogin(user, messageId, locale);
+                editMessageOnEnterLogin(user);
             }
 
             case CHANGE_FIRST_NAME -> {
@@ -163,15 +167,14 @@ public class FirstVisitHandler implements UpdateHandler {
     private void handleRegister(CallbackQuery query, RegisterUser user) {
         String username = query.getFrom().getUserName();
         Locale locale = user.getLocale();
-        Integer messageId = query.getMessage().getMessageId();
 
         user.setUsername(username);
         Optional<String> violations = validationUtil.findViolationsOf(user, locale);
         if (violations.isPresent()) {
-            sendMessageEnterLogin(user, messageId, locale);
+            editMessageOnEnterLogin(user);
         } else {
             messageService.editMenu(user,
-                    messageId, localizationService.localize(USE_FOR_LOGIN, locale)
+                    user.getMenuId(), localizationService.localize(USE_FOR_LOGIN, locale)
                                                   .formatted(username), menu.saveUsername(locale));
         }
     }
@@ -194,11 +197,10 @@ public class FirstVisitHandler implements UpdateHandler {
         if (violations.isPresent()) {
             text = violations.get() + lineSeparator()
                     + localizationService.localize(REPEAT, locale);
-            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
+            messageService.editMenu(user, user.getMenuId(), text, menu.beckToMainButton(locale));
         } else {
-            messageService.sendMenu(user,
-                    localizationService.localize(ENTER_PASSWORD, locale),
-                    menu.beckToMainButton(locale));
+            text = localizationService.localize(ENTER_PASSWORD, locale);
+            messageService.editMenu(user, user.getMenuId(), text, menu.beckToMainButton(locale));
             userService.saveTempUser(user);
         }
     }
@@ -206,33 +208,32 @@ public class FirstVisitHandler implements UpdateHandler {
     private void setPassword(LoginUser user, Message message) {
         String text;
         Locale locale = user.getLocale();
-        Integer messageId = message.getMessageId();
+        Integer messageId = user.getMenuId();
 
-        messageService.deleteMessage(user, messageId);
         user.setPassword(message.getText());
 
         Optional<String> violations = validationUtil.findViolationsOf(user, locale);
         if (violations.isPresent()) {
             text = violations.get() + lineSeparator()
                     + localizationService.localize(REPEAT, locale);
-            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
+            messageService.editMenu(user, messageId, text, menu.beckToMainButton(locale));
         } else {
             if (user instanceof RegisterUser registerUser) {
                 text = localizationService.localize(PASSWORD_ACCEPTED, locale)
                         + localizationService.localize(REPEAT_PASSWORD, locale);
-                messageService.sendMenu(user, text, menu.beckToMainButton(locale));
+                messageService.editMenu(user, messageId, text, menu.beckToMainButton(locale));
                 userService.saveTempUser(registerUser);
             } else {
                 boolean isAuthenticated = userService.authenticateUser(user);
                 if (isAuthenticated) {
                     text = localizationService.localize(HELLO, locale)
                                               .formatted(user.getFirstName());
-                    messageService.editMenu(user, messageId - 1, text,
+                    messageService.editMenu(user, messageId, text,
                             menu.beckToMainButton(locale));
                 } else {
                     text = localizationService.localize(WRONG_CREDENTIALS, locale)
                             + localizationService.localize(REPEAT, locale);
-                    messageService.editMenu(user, messageId - 1, text,
+                    messageService.editMenu(user, messageId, text,
                             menu.registration(locale));
                 }
                 userService.deleteTempUser(user);
@@ -243,8 +244,7 @@ public class FirstVisitHandler implements UpdateHandler {
     private void setRepeatPassword(RegisterUser user, Message message) {
         String text;
         Locale locale = user.getLocale();
-        Integer messageId = message.getMessageId();
-        messageService.deleteMessage(user, messageId);
+        Integer messageId = user.getMenuId();
         user.setRepeatPassword(message.getText());
 
         Optional<String> violations = validationUtil.findViolationsOf(user, locale);
@@ -253,12 +253,11 @@ public class FirstVisitHandler implements UpdateHandler {
             user.setRepeatPassword(null);
             text = violations.get() + lineSeparator()
                      + localizationService.localize(REPEAT, locale);
-            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
+            messageService.editMenu(user, messageId, text, menu.beckToMainButton(locale));
         } else {
             text = localizationService.localize(PASSWORD_ACCEPTED, locale)
                     + lineSeparator() + localizationService.localize(ENTER_PHONE, locale);
-            messageService.editMenu(user, messageId - 1, text,
-                    menu.beckToMainButton(locale));
+            messageService.editMenu(user, messageId, text, menu.beckToMainButton(locale));
         }
         userService.saveTempUser(user);
     }
@@ -286,13 +285,13 @@ public class FirstVisitHandler implements UpdateHandler {
         if (violations.isPresent()) {
             text = violations.get() + lineSeparator()
                     + localizationService.localize(REPEAT, locale);
-            messageService.sendMenu(user, text, failMenu);
+            messageService.editMenu(user, user.getMenuId(), text, failMenu);
         } else {
             userService.saveTempUser(user);
             String lastName = user.getLastName() == null ? VALUE_MISSING : user.getLastName();
             text = localizationService.localize(CHANGE_NAMES, locale)
                                       .formatted(lineSeparator(), user.getFirstName(), lastName);
-            messageService.sendMenu(user, text, menu.changeName(locale));
+            messageService.editMenu(user, user.getMenuId(), text, menu.changeName(locale));
         }
     }
 
@@ -303,17 +302,18 @@ public class FirstVisitHandler implements UpdateHandler {
         Optional<User> optionalUser = userService.registerUser((RegisterUser) user);
         if (optionalUser.isPresent()) {
             text = localizationService.localize(HELLO, locale).formatted(user.getFirstName());
-            messageService.sendMenu(user, text, menu.beckToMainButton(locale));
+            messageService.editMenu(user, user.getMenuId(), text, menu.beckToMainButton(locale));
         } else {
             text = localizationService.localize(MISTAKE_OCCURS, locale)
                     + localizationService.localize(REPEAT, locale);
-            messageService.sendMenu(user, text, menu.registration(locale));
+            messageService.editMenu(user, user.getMenuId(), text, menu.registration(locale));
         }
         userService.deleteTempUser(user);
     }
 
-    private void sendMessageEnterLogin(User user, Integer messageId, Locale locale) {
-        messageService.editMenu(user, messageId,
+    private void editMessageOnEnterLogin(User user) {
+        Locale locale = user.getLocale();
+        messageService.editMenu(user, user.getMenuId(),
                 localizationService.localize(ENTER_LOGIN, locale), menu.beckToMainButton(locale));
     }
 }

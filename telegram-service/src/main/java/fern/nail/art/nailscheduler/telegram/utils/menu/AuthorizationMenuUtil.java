@@ -1,8 +1,8 @@
-package fern.nail.art.nailscheduler.telegram.utils;
+package fern.nail.art.nailscheduler.telegram.utils.menu;
 
+import fern.nail.art.nailscheduler.telegram.utils.menu.button.AuthorizationButtonUtil;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -46,5 +46,4 @@ public class AuthorizationMenuUtil {
                                    .keyboardRow(row2)
                                    .build();
     }
-
 }

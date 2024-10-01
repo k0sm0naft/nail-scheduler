@@ -4,7 +4,6 @@ import fern.nail.art.nailscheduler.telegram.exception.SendMessageException;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import java.io.Serializable;
-import java.util.Stack;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;

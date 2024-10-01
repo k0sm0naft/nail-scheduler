@@ -21,6 +21,6 @@ public sealed class LoginUser extends User permits RegisterUser {
                 user.getPhone(),
                 user.getLocale(),
                 user.getRole(),
-                user.getMessageIds());
+                user.getMenuId());
     }
 }
