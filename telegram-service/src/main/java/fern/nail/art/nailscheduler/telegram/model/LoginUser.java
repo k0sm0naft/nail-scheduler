@@ -12,7 +12,7 @@ public sealed class LoginUser extends User permits RegisterUser {
     private String username;
     @Password
     private String password;
-
+//todo delete RegisterUser and rename LoginUser to AuthUser, change processors to process AuthUser on GlobalStatus not on type of user.
     public LoginUser(User user) {
         super(user.getTelegramId(),
                 user.getUserId(),
@@ -21,6 +21,8 @@ public sealed class LoginUser extends User permits RegisterUser {
                 user.getPhone(),
                 user.getLocale(),
                 user.getRole(),
-                user.getMenuId());
+                user.getMenuId(),
+                user.getGlobalState(),
+                user.getLocalState());
     }
 }

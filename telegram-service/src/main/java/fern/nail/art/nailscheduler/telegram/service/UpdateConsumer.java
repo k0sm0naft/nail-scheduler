@@ -1,10 +1,10 @@
 package fern.nail.art.nailscheduler.telegram.service;
 
-import fern.nail.art.nailscheduler.telegram.handler.impl.ClientVisitHandler;
-import fern.nail.art.nailscheduler.telegram.handler.impl.FirstVisitHandler;
-import fern.nail.art.nailscheduler.telegram.handler.impl.MasterVisitHandler;
+import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
+import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -15,19 +15,25 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     //todo change consumer and process in multithreading
     // public class UpdateConsumer implements LongPollingUpdateConsumer {
     private final UserService userService;
-    private final FirstVisitHandler firstVisitHandler;
-    private final ClientVisitHandler clientVisitHandler;
-    private final MasterVisitHandler masterVisitHandler;
+    private final ApplicationEventPublisher eventPublisher;
+    private final MessageService messageService;
 
     @Override
     public void consume(Update update) {
         User user = userService.getUser(update);
 
-        switch (user.getRole()) {
-            case UNKNOWN -> firstVisitHandler.handleUpdate(update, user);
-            case CLIENT -> clientVisitHandler.handleUpdate(update, user);
-            case MASTER -> masterVisitHandler.handleUpdate(update, user);
-            default -> throw new RuntimeException("Unsupported user role: " + user.getRole());
+        if (update.hasMessage() && update.getMessage().isCommand()) {
+            user.setGlobalState(GlobalState.COMMAND);
+        }
+
+        if (update.hasCallbackQuery()) {
+            user.setMenuId(update.getCallbackQuery().getMessage().getMessageId());
+        }
+
+        eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
+
+        if (update.hasMessage()) {
+            messageService.deleteMessage(user, update.getMessage().getMessageId());
         }
     }
 }

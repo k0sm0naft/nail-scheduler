@@ -1,13 +1,12 @@
-package fern.nail.art.nailscheduler.telegram.utils.menu.button;
+package fern.nail.art.nailscheduler.telegram.utils.menu;
 
-import static fern.nail.art.nailscheduler.telegram.utils.Command.CHANGE_FIRST_NAME;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.CHANGE_LAST_NAME;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.CHANGE_USERNAME;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.LOGIN;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.MAIN;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.REGISTER;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.REGISTRATION;
-import static fern.nail.art.nailscheduler.telegram.utils.Command.SAVE_USERNAME;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.CHANGE_FIRST_NAME;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.CHANGE_LAST_NAME;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.CHANGE_USERNAME;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.LOGIN;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.MAIN;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.REGISTRATION;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.SAVE_USERNAME;
 import static org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton.builder;
 
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
@@ -18,7 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 
 @Component
 @RequiredArgsConstructor
-public class AuthorizationButtonUtil {
+public class ButtonUtil {
     private static final String BUTTON_TO_BEGINNING = "button.to.beginning";
     private static final String BUTTON_USE = "button.use";
     private static final String BUTTON_CHANGE = "button.change";
@@ -53,7 +52,7 @@ public class AuthorizationButtonUtil {
     public InlineKeyboardButton register(Locale locale) {
         return builder()
                 .text(localizationService.localize(BUTTON_REGISTER, locale))
-                .callbackData(REGISTER.getCommand())
+                .callbackData(REGISTRATION.getCommand())
                 .build();
     }
 

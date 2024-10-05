@@ -5,14 +5,10 @@ import fern.nail.art.nailscheduler.common.annotation.Phone;
 import java.io.Serializable;
 import java.util.Locale;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Builder
-@EqualsAndHashCode
 public sealed class User implements Serializable permits LoginUser {
     private Long telegramId;
     private Long userId;
@@ -25,6 +21,8 @@ public sealed class User implements Serializable permits LoginUser {
     private Locale locale;
     private Role role;
     private Integer menuId;
+    private GlobalState globalState;
+    private LocalState localState;
 
     public enum Role {
         CLIENT,

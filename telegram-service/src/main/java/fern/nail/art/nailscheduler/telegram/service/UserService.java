@@ -15,7 +15,9 @@ public interface UserService {
 
     void deleteTempUser(User user);
 
-    Optional<User> registerUser(RegisterUser user);
+    Optional<User> register(RegisterUser user);
 
-    boolean authenticateUser(LoginUser user);
+    boolean authenticate(LoginUser user);
+
+    void clearPreviousMenu(User user);
 }
