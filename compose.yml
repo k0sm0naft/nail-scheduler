@@ -21,6 +21,10 @@ services:
     container_name: redis_cache
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - redis_data:/var/lib/redis/data
+      - ./redis.conf:/var/lib/redis/redis.conf
+    command: [ "redis-server", "/var/lib/redis/redis.conf" ]
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
@@ -53,3 +57,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
