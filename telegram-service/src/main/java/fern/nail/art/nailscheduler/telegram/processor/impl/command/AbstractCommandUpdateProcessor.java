@@ -5,6 +5,7 @@ import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
+import fern.nail.art.nailscheduler.telegram.service.UserService;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
@@ -20,8 +21,13 @@ public abstract class AbstractCommandUpdateProcessor implements UpdateProcessor 
 
     protected void clearPreviousMenu(User user, MessageService messageService) {
         if (user.getMenuId() != null) {
-            user.setMenuId(null);
             messageService.deleteMessage(user, user.getMenuId());
+            user.setMenuId(null);
         }
+    }
+
+    protected void saveMenuId(User user, Integer menuId, UserService userService) {
+        user.setMenuId(menuId);
+        userService.saveTempUser(user);
     }
 }
