@@ -22,18 +22,21 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     public void consume(Update update) {
         User user = userService.getUser(update);
 
-        if (update.hasMessage() && update.getMessage().isCommand()) {
-            user.setGlobalState(GlobalState.COMMAND);
+        if (update.hasMessage()) {
+            messageService.deleteMessage(user, update.getMessage().getMessageId());
+
+            if (update.getMessage().isCommand()) {
+                user.setGlobalState(GlobalState.COMMAND);
+                user.setLocalState(null);
+            }
         }
 
-        if (update.hasCallbackQuery()) {
+
+        if (update.hasCallbackQuery() && user.getMenuId() == null) {
             user.setMenuId(update.getCallbackQuery().getMessage().getMessageId());
         }
 
-        eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
 
-        if (update.hasMessage()) {
-            messageService.deleteMessage(user, update.getMessage().getMessageId());
-        }
+        eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
     }
 }
