@@ -2,16 +2,15 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import static java.lang.System.lineSeparator;
 
+import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
-import fern.nail.art.nailscheduler.telegram.model.RegisterUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,6 @@ public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
     private final UserService userService;
     private final ValidationUtil validationUtil;
 
@@ -35,13 +33,13 @@ public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
     public boolean canProcess(Update update, User user) {
         return GlobalState.REGISTRATION == user.getGlobalState()
                 && LocalState.AWAITING_REPEAT_PASSWORD == user.getLocalState()
-                && user instanceof RegisterUser
+                && user instanceof AuthUser
                 && update.hasMessage();
     }
 
     @Override
     public void process(Update update, User commonUser) {
-        RegisterUser user = (RegisterUser) commonUser;
+        AuthUser user = (AuthUser) commonUser;
         String text;
         Locale locale = user.getLocale();
         Integer messageId = user.getMenuId();
@@ -58,7 +56,7 @@ public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
             text = localizationService.localize(PASSWORD_ACCEPTED, locale)
                     + lineSeparator() + localizationService.localize(ENTER_PHONE, locale);
         }
-        messageService.editMenu(user, messageId, text, menu.beckToMainButton(locale));
         userService.saveTempUser(user);
+        messageService.editTextMessage(user, messageId, text);
     }
 }

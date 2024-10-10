@@ -3,15 +3,14 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 import static java.lang.System.lineSeparator;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
+import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
-import fern.nail.art.nailscheduler.telegram.model.LoginUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,6 @@ public class AwaitingPasswordUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
     private final UserService userService;
     private final ValidationUtil validationUtil;
     private final ApplicationEventPublisher eventPublisher;
@@ -35,14 +33,14 @@ public class AwaitingPasswordUpdateProcessor implements UpdateProcessor {
     @Override
     public boolean canProcess(Update update, User user) {
         return LocalState.AWAITING_PASSWORD == user.getLocalState()
-                && user instanceof LoginUser
+                && user instanceof AuthUser
                 && update.hasMessage()
                 && update.getMessage().hasText();
     }
 
     @Override
     public void process(Update update, User commonUser) {
-        LoginUser user = (LoginUser) commonUser;
+        AuthUser user = (AuthUser) commonUser;
         String text;
         Locale locale = user.getLocale();
 
@@ -52,7 +50,7 @@ public class AwaitingPasswordUpdateProcessor implements UpdateProcessor {
         if (violations.isPresent()) {
             text = violations.get() + lineSeparator()
                     + localizationService.localize(REPEAT, locale);
-            messageService.editMenu(user, user.getMenuId(), text, menu.beckToMainButton(locale));
+            messageService.editTextMessage(user, user.getMenuId(), text);
         } else {
             user.setLocalState(LocalState.PASSWORD_ACCEPTED);
             userService.saveTempUser(user);

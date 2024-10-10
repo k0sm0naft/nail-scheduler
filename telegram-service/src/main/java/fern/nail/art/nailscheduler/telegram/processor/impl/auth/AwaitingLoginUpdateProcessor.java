@@ -2,8 +2,8 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import static java.lang.System.lineSeparator;
 
+import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
-import fern.nail.art.nailscheduler.telegram.model.LoginUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
@@ -32,14 +32,14 @@ public class AwaitingLoginUpdateProcessor implements UpdateProcessor {
     @Override
     public boolean canProcess(Update update, User user) {
         return LocalState.AWAITING_USERNAME == user.getLocalState()
-                && user instanceof LoginUser
+                && user instanceof AuthUser
                 && update.hasMessage()
                 && update.getMessage().hasText();
     }
 
     @Override
     public void process(Update update, User commonUser) {
-        LoginUser user = (LoginUser) commonUser;
+        AuthUser user = (AuthUser) commonUser;
         String text;
         Locale locale = user.getLocale();
 
@@ -54,6 +54,6 @@ public class AwaitingLoginUpdateProcessor implements UpdateProcessor {
             user.setLocalState(LocalState.AWAITING_PASSWORD);
             userService.saveTempUser(user);
         }
-        messageService.editMenu(user, user.getMenuId(), text, menu.beckToMainButton(locale));
+        messageService.editTextMessage(user, user.getMenuId(), text);
     }
 }

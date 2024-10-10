@@ -1,9 +1,9 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
+import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
-import fern.nail.art.nailscheduler.telegram.model.LoginUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +24,8 @@ public class LoginUpdateProcessor implements UpdateProcessor {
 
     @Override
     public void process(Update update, User user) {
-        user = new LoginUser(user);
         user.setLocalState(LocalState.SEND_USERNAME_REQUEST);
 
-        eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
+        eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, new AuthUser(user)));
     }
 }

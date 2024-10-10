@@ -6,11 +6,9 @@ import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 @Component
 @RequiredArgsConstructor
@@ -19,7 +17,6 @@ public class SendPasswordRequestUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
     private final UserService userService;
 
     @Override
@@ -30,10 +27,9 @@ public class SendPasswordRequestUpdateProcessor implements UpdateProcessor {
     @Override
     public void process(Update update, User user) {
         String text = localizationService.localize(ENTER_PASSWORD, user.getLocale());
-        InlineKeyboardMarkup markup = menu.beckToMainButton(user.getLocale());
         user.setLocalState(LocalState.AWAITING_PASSWORD);
 
         userService.saveTempUser(user);
-        messageService.editMenu(user, user.getMenuId(), text, markup);
+        messageService.editTextMessage(user, user.getMenuId(), text);
     }
 }

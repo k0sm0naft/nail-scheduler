@@ -1,10 +1,10 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
+import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.CallbackQueryData;
 import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
-import fern.nail.art.nailscheduler.telegram.model.RegisterUser;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
@@ -46,23 +46,25 @@ public class RegistrationUpdateProcessor implements UpdateProcessor {
         if (update.hasCallbackQuery()) {
             String data = update.getCallbackQuery().getData();
             switch (CallbackQueryData.fromString(data)) {
-                case REGISTRATION -> startRegistration(update, user);
-                case SAVE_USERNAME -> saveUsername(update, (RegisterUser) user);
+                case REGISTRATION -> {
+                    user = new AuthUser(user);
+                    startRegistration(update, (AuthUser) user);
+                }
+                case SAVE_USERNAME -> saveUsername(update, (AuthUser) user);
                 case CHANGE_USERNAME -> changeUsername(update, user);
             }
         }
+        userService.saveTempUser(user);
     }
 
-    private void saveUsername(Update update, RegisterUser user) {
+    private void saveUsername(Update update, AuthUser user) {
         String username = AbilityUtils.getUser(update).getUserName();
         user.setUsername(username);
         user.setLocalState(LocalState.SEND_PASSWORD_REQUEST);
         eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
     }
 
-    private void startRegistration(Update update, User commonUser) {
-        RegisterUser user = new RegisterUser(commonUser);
-
+    private void startRegistration(Update update, AuthUser user) {
         String username = AbilityUtils.getUser(update).getUserName();
         Locale locale = user.getLocale();
 

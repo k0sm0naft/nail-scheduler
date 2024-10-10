@@ -43,8 +43,7 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
     @Override
     public void process(Update update, User user) {
         if (update.hasCallbackQuery()) {
-            CallbackQuery callbackQuery = update.getCallbackQuery();
-            String data = callbackQuery.getData();
+            String data = update.getCallbackQuery().getData();
             switch (CallbackQueryData.fromString(data)) {
                 case CHANGE_FIRST_NAME -> handleChangeFirsName(user);
                 case CHANGE_LAST_NAME -> handleChangeLastName(user);

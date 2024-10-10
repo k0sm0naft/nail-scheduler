@@ -52,11 +52,11 @@ public class AuthenticationUpdateProcessor implements UpdateProcessor {
     }
 
     private void sendAuthMenu(User user) {
-        userService.clearPreviousMenu(user);
-
         String text = localizationService.localize(CHOSE_OPTION, user.getLocale());
         InlineKeyboardMarkup markup = menu.authentication(user.getLocale());
 
-        messageService.sendMenu(user, text, markup);
+        Integer menuId = messageService.sendMenuAndGetId(user, text, markup);
+        user.setMenuId(menuId);
+        userService.saveTempUser(user);
     }
 }

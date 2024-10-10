@@ -47,7 +47,7 @@ public class AwaitingPhoneUpdateProcessor implements UpdateProcessor {
         if (violations.isPresent()) {
             text = violations.get() + lineSeparator()
                     + localizationService.localize(REPEAT, locale);
-            messageService.editMenu(user, menuId, text, menu.beckToMainButton(user.getLocale()));
+            messageService.editTextMessage(user, menuId, text);
         } else {
             user.setLocalState(LocalState.SEND_NAME_REQUEST);
             userService.saveTempUser(user);
