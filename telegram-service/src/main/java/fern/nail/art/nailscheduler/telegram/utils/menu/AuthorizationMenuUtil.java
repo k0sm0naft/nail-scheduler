@@ -11,25 +11,19 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 public class AuthorizationMenuUtil {
     private final ButtonUtil button;
 
-    public InlineKeyboardMarkup beckToMainButton(Locale locale) {
-        return InlineKeyboardMarkup.builder()
-                                   .keyboardRow(new InlineKeyboardRow(button.toBeginning(locale)))
-                                   .build();
-    }
-
     public InlineKeyboardMarkup saveUsername(Locale locale) {
         InlineKeyboardRow row1 =
                 new InlineKeyboardRow(button.saveUsername(locale), button.changeUsername(locale));
-        InlineKeyboardRow row2 = new InlineKeyboardRow(button.toBeginning(locale));
+
         return InlineKeyboardMarkup.builder()
                                    .keyboardRow(row1)
-                                   .keyboardRow(row2)
                                    .build();
     }
 
     public InlineKeyboardMarkup authentication(Locale locale) {
         InlineKeyboardRow row =
                 new InlineKeyboardRow(button.register(locale), button.login(locale));
+
         return InlineKeyboardMarkup.builder()
                                    .keyboardRow(row)
                                    .build();
@@ -38,8 +32,10 @@ public class AuthorizationMenuUtil {
     public InlineKeyboardMarkup changeName(Locale locale) {
         InlineKeyboardRow row1 =
                 new InlineKeyboardRow(button.changeFirstName(locale), button.changeLastName(locale));
-        InlineKeyboardRow
-                row2 = new InlineKeyboardRow(button.confirm(locale), button.toBeginning(locale));
+
+        InlineKeyboardRow row2 =
+                new InlineKeyboardRow(button.confirm(locale));
+
         return InlineKeyboardMarkup.builder()
                                    .keyboardRow(row1)
                                    .keyboardRow(row2)

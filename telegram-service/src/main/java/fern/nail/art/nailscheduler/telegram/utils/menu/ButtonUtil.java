@@ -6,6 +6,7 @@ import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.CHANG
 import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.LOGIN;
 import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.MAIN;
 import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.REGISTRATION;
+import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.SAVE_FULL_NAME;
 import static fern.nail.art.nailscheduler.telegram.model.CallbackQueryData.SAVE_USERNAME;
 import static org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton.builder;
 
@@ -80,7 +81,7 @@ public class ButtonUtil {
     public InlineKeyboardButton confirm(Locale locale) {
         return builder()
                 .text(localizationService.localize(BUTTON_CONFIRM, locale))
-                .callbackData(REGISTRATION.getCommand())
+                .callbackData(SAVE_FULL_NAME.getCommand())
                 .build();
     }
 }

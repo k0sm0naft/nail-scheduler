@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public sealed class User implements Serializable permits LoginUser {
+public sealed class User implements Serializable permits AuthUser {
     private Long telegramId;
     private Long userId;
     @Name
