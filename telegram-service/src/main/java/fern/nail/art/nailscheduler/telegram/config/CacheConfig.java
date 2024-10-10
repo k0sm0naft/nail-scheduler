@@ -1,6 +1,5 @@
 package fern.nail.art.nailscheduler.telegram.config;
 
-import java.time.Duration;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,14 +14,12 @@ public class CacheConfig {
 
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
-        return RedisCacheManager.builder()
+        return RedisCacheManager
+                .builder()
                 .cacheWriter(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFactory))
                 .withCacheConfiguration("telegramUserCache",
                         RedisCacheConfiguration.defaultCacheConfig()
-                                               .entryTtl(Duration.ofDays(1)))
-                .withCacheConfiguration("telegramNewUserCache",
-                        RedisCacheConfiguration.defaultCacheConfig()
-                                               .entryTtl(Duration.ofMinutes(30)))
+                                               .entryTtl(RedisCacheWriter.TtlFunction.persistent()))
                 .build();
     }
 }

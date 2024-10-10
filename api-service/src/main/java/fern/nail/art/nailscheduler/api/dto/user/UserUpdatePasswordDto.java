@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.api.dto.user;
 
-import fern.nail.art.nailscheduler.api.annotation.PasswordMatchValidator;
+import fern.nail.art.nailscheduler.common.annotation.PasswordMatchValidator;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
 
