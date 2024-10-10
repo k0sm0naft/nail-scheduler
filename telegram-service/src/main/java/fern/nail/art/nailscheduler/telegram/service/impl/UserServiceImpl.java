@@ -2,8 +2,8 @@ package fern.nail.art.nailscheduler.telegram.service.impl;
 
 import fern.nail.art.nailscheduler.telegram.client.UserClient;
 import fern.nail.art.nailscheduler.telegram.mapper.UserMapper;
-import fern.nail.art.nailscheduler.telegram.model.LoginUser;
-import fern.nail.art.nailscheduler.telegram.model.RegisterUser;
+import fern.nail.art.nailscheduler.telegram.model.AuthUser;
+import fern.nail.art.nailscheduler.telegram.model.RegistrationResult;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
     private final MessageService messageService;
 
     @Override
-    //    @Cacheable(get = "telegramUserCache", key = "#result.telegramId")
+    @Cacheable(value = "telegramUserCache", key = "T(org.telegram.telegrambots.abilitybots.api.util.AbilityUtils).getChatId(#update)")
     public User getUser(Update update) {
         //todo add real db for telegramUsers
         //todo try get user from db, next try get from api, next create tempUser for reg-on or login
@@ -34,13 +34,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CachePut(value = "telegramNewUserCache", key = "#user.telegramId")
+    @CachePut(value = "telegramUserCache", key = "#user.telegramId")
     public User saveTempUser(User user) {
         return user;
     }
 
     @Override
-    @Cacheable(value = "telegramNewUserCache", key = "#user.telegramId")
+    @Cacheable(value = "telegramUserCache", key = "#user.telegramId")
     public User getTempUser(User user) {
         return user;
     }
@@ -54,17 +54,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CachePut(value = "telegramUserCache", key = "#user.telegramId")
-    public Optional<User> register(RegisterUser user) {
-        return userClient.registerUser(user).map(userId -> {
-            user.setUserId(userId);
-            return user;
-        });
+    public RegistrationResult register(AuthUser user) {
+        return userClient.registerUser(user);
     }
 
     @Override
     @CacheEvict(value = "telegramUserCache", key = "#user.telegramId")
-    public boolean authenticate(LoginUser user) {
+    public boolean authenticate(AuthUser user) {
         Optional<Long> userId = userClient.findUserId(user);
         if (userId.isPresent()) {
             user.setUserId(userId.get());
@@ -72,13 +68,5 @@ public class UserServiceImpl implements UserService {
             user.setRole(User.Role.CLIENT);
         }
         return userId.isPresent();
-    }
-
-    @Override
-    public void clearPreviousMenu(User user) {
-        if (user.getMenuId() != null) {
-            user.setMenuId(null);
-            messageService.deleteMessage(user, user.getMenuId());
-        }
     }
 }

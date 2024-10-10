@@ -4,9 +4,9 @@ import fern.nail.art.nailscheduler.telegram.model.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 public interface MessageService {
-    void sendText(User user, String text);
+    Integer sendTextAndGetId(User user, String text);
 
-    void sendMenu(User user, String text, InlineKeyboardMarkup markup);
+    Integer sendMenuAndGetId(User user, String text, InlineKeyboardMarkup markup);
 
     void editTextMessage(User user, Integer messageId, String text);
 

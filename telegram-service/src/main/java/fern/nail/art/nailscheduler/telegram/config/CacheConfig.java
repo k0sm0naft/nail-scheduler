@@ -15,14 +15,12 @@ public class CacheConfig {
 
     @Bean
     public RedisCacheManager redisCacheManager(RedisConnectionFactory connectionFactory) {
-        return RedisCacheManager.builder()
+        return RedisCacheManager
+                .builder()
                 .cacheWriter(RedisCacheWriter.nonLockingRedisCacheWriter(connectionFactory))
                 .withCacheConfiguration("telegramUserCache",
                         RedisCacheConfiguration.defaultCacheConfig()
-                                               .entryTtl(Duration.ofDays(1)))
-                .withCacheConfiguration("telegramNewUserCache",
-                        RedisCacheConfiguration.defaultCacheConfig()
-                                               .entryTtl(Duration.ofMinutes(30)))
+                                               .entryTtl(RedisCacheWriter.TtlFunction.persistent()))
                 .build();
     }
 }

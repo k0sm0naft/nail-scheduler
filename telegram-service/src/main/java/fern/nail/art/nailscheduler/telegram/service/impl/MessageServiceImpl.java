@@ -5,6 +5,7 @@ import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import java.io.Serializable;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -15,22 +16,28 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
     private final TelegramClient telegramClient;
 
     @Override
-    public void sendText(User user, String text) {
-        sendMenu(user, text, null);
+    public Integer sendTextAndGetId(User user, String text) {
+        return sendMenuAndGetId(user, text, null);
     }
 
     @Override
-    public void sendMenu(User user, String text, InlineKeyboardMarkup markup) {
-        send(SendMessage.builder()
-                        .chatId(user.getTelegramId())
-                        .text(text)
-                        .replyMarkup(markup)
-                        .build());
+    public Integer sendMenuAndGetId(User user, String text, InlineKeyboardMarkup markup) {
+        try {
+            return telegramClient.execute(SendMessage.builder()
+                                                     .chatId(user.getTelegramId())
+                                                     .text(text)
+                                                     .replyMarkup(markup)
+                                                     .build())
+                                 .getMessageId();
+        } catch (TelegramApiException e) {
+            throw new SendMessageException("Can't execute message. Cause: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -60,7 +67,7 @@ public class MessageServiceImpl implements MessageService {
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
-            throw new SendMessageException("Can't execute message.", e);
+            log.error("Can't execute message. Cause: {}", e.getMessage(), e);
         }
     }
 }
