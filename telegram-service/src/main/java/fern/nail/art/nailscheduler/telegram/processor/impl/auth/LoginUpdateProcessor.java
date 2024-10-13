@@ -24,7 +24,7 @@ public class LoginUpdateProcessor implements UpdateProcessor {
 
     @Override
     public void process(Update update, User user) {
-        user.setLocalState(LocalState.SEND_USERNAME_REQUEST);
+        user.setLocalState(LocalState.SEND_REQUEST_USERNAME);
 
         eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, new AuthUser(user)));
     }

@@ -1,5 +1,8 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.common;
 
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_FIRST_NAME;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_LAST_NAME;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CONFIRM;
 import static java.lang.System.lineSeparator;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
@@ -7,12 +10,15 @@ import fern.nail.art.nailscheduler.telegram.model.LocalState;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
+import fern.nail.art.nailscheduler.telegram.service.MarkupFactory;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -26,7 +32,7 @@ public class AwaitingNameUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
+    private final MarkupFactory markupFactory;
     private final UserService userService;
     private final ValidationUtil validationUtil;
     private final ApplicationEventPublisher eventPublisher;
@@ -40,24 +46,36 @@ public class AwaitingNameUpdateProcessor implements UpdateProcessor {
 
     @Override
     public void process(Update update, User user) {
-        String name = update.getMessage().getText();
-        if (LocalState.AWAITING_FIRST_NAME == user.getLocalState()) {
-            user.setFirstName(name);
+        user.setLocalState(LocalState.SEND_REQUEST_NAME);
+
+        if (user.getLocalState() == LocalState.AWAITING_FIRST_NAME) {
+            updateUserName(user, user::setFirstName, user::getFirstName, update);
         } else {
-            user.setLastName(name);
+            updateUserName(user, user::setLastName, user::getLastName, update);
         }
+    }
+
+    private void updateUserName(
+            User user, Consumer<String> setName, Supplier<String> getName, Update update
+    ) {
+        String oldName = getName.get();
+        setName.accept(update.getMessage().getText());
 
         Locale locale = user.getLocale();
         Optional<String> violations = validationUtil.findViolationsOf(user, locale);
+
         if (violations.isPresent()) {
-            String text = violations.get() + lineSeparator()
-                    + localizationService.localize(REPEAT, locale);
-            InlineKeyboardMarkup markup = menu.changeName(user.getLocale());
+            setName.accept(oldName);
+            String text = violations.get() + lineSeparator() +
+                    localizationService.localize(REPEAT, locale);
+            InlineKeyboardMarkup markup = markupFactory
+                    .create(List.of(CHANGE_FIRST_NAME, CHANGE_LAST_NAME, CONFIRM), locale);
+
             messageService.editMenu(user, user.getMenuId(), text, markup);
         } else {
-            user.setLocalState(LocalState.SEND_NAME_REQUEST);
-            userService.saveUser(user);
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         }
+
+        userService.saveUser(user);
     }
 }

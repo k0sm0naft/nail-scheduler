@@ -23,7 +23,7 @@ services:
       - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - redis_data:/var/lib/redis/data
-      - ./redis.conf:/var/lib/redis/redis.conf
+      - .redis.conf:/var/lib/redis/redis.conf
     command: [ "redis-server", "/var/lib/redis/redis.conf" ]
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]

@@ -1,5 +1,8 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.LOGIN;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.REGISTRATION;
+
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.GlobalState;
@@ -8,30 +11,32 @@ import fern.nail.art.nailscheduler.telegram.model.RegistrationResult;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
+import fern.nail.art.nailscheduler.telegram.service.MarkupFactory;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
+import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 @Component
 @RequiredArgsConstructor
-public class FullNameAcceptedRegistrationUpdateProcessor implements UpdateProcessor {
+public class NameAcceptedRegistrationUpdateProcessor implements UpdateProcessor {
     private static final String REPEAT = "message.repeat";
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
+    private final MarkupFactory markupFactory;
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public boolean canProcess(Update update, User user) {
         return GlobalState.REGISTRATION == user.getGlobalState()
-                && LocalState.FULL_NAME_ACCEPTED == user.getLocalState();
+                && LocalState.ACCEPTED_FULL_NAME == user.getLocalState();
     }
 
     @Override
@@ -49,8 +54,11 @@ public class FullNameAcceptedRegistrationUpdateProcessor implements UpdateProces
         } else {
             String text = registrationResult.errorMessage()
                     + localizationService.localize(REPEAT, locale);
-            messageService.editMenu(user, user.getMenuId(), text, menu.authentication(locale));
+            InlineKeyboardMarkup markup =
+                    markupFactory.create(List.of(REGISTRATION, LOGIN), locale);
+
             userService.saveUser(user);
+            messageService.editMenu(user, user.getMenuId(), text, markup);
         }
     }
 }

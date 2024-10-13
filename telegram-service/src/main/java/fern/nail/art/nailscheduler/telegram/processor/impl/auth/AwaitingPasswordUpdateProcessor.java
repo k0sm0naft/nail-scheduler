@@ -51,7 +51,7 @@ public class AwaitingPasswordUpdateProcessor implements UpdateProcessor {
                     + localizationService.localize(REPEAT, locale);
             messageService.editTextMessage(user, user.getMenuId(), text);
         } else {
-            user.setLocalState(LocalState.PASSWORD_ACCEPTED);
+            user.setLocalState(LocalState.ACCEPTED_PASSWORD);
             userService.saveUser(user);
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         }

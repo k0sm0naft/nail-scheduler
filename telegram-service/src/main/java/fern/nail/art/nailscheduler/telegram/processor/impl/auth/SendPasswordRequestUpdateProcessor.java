@@ -21,7 +21,7 @@ public class SendPasswordRequestUpdateProcessor implements UpdateProcessor {
 
     @Override
     public boolean canProcess(Update update, User user) {
-        return LocalState.SEND_PASSWORD_REQUEST == user.getLocalState();
+        return LocalState.SEND_REQUEST_PASSWORD == user.getLocalState();
     }
 
     @Override

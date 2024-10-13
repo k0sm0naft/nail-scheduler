@@ -8,7 +8,6 @@ import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
-import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
 import java.util.Locale;
 import java.util.Optional;
@@ -24,7 +23,6 @@ public class AwaitingPhoneUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final UserService userService;
     private final ValidationUtil validationUtil;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -47,9 +45,7 @@ public class AwaitingPhoneUpdateProcessor implements UpdateProcessor {
                     + localizationService.localize(REPEAT, locale);
             messageService.editTextMessage(user, menuId, text);
         } else {
-            user.setLocalState(LocalState.SEND_NAME_REQUEST);
-            userService.saveUser(user);
-
+            user.setLocalState(LocalState.ACCEPTED_PHONE);
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         }
     }

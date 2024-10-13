@@ -25,7 +25,7 @@ public class PasswordAcceptedRegistrationUpdateProcessor implements UpdateProces
     @Override
     public boolean canProcess(Update update, User user) {
         return GlobalState.REGISTRATION == user.getGlobalState()
-                && LocalState.PASSWORD_ACCEPTED == user.getLocalState()
+                && LocalState.ACCEPTED_PASSWORD == user.getLocalState()
                 && update.hasMessage();
     }
 
