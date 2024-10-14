@@ -1,10 +1,9 @@
 package fern.nail.art.nailscheduler.telegram.utils;
 
-import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
+import fern.nail.art.nailscheduler.telegram.model.MessageType;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +13,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ValidationUtil {
     private final Validator validator;
-    private final LocalizationService localizationService;
 
-    public <T> Optional<String> findViolationsOf(T object, Locale locale) {
-        return findViolationsOf(object, null, locale);
+    public <T> List<String> findViolationsOf(T object) {
+        return findViolationsOf(object, null);
     }
 
-    public <T> Optional<String> findViolationsOf(T object, String propertyName, Locale locale) {
+    public <T> List<String> findViolationsOf(T object, String propertyName) {
         Set<ConstraintViolation<T>> violations;
 
         if (propertyName == null) {
@@ -29,18 +27,17 @@ public class ValidationUtil {
             violations = validator.validateProperty(object, propertyName);
         }
 
-        if (!violations.isEmpty()) {
-            String errorMessage =
-                    violations.stream()
-                              .map(ConstraintViolation::getMessage)
-                              .map(this::extractKeyFromBrackets)
-                              .map(message -> localizationService.localize(message, locale))
-                              //todo format to red color for telegram
-                              .collect(Collectors.joining(System.lineSeparator()));
-            return Optional.of(errorMessage);
+        List<String> violationKeys = violations.stream()
+                                      .map(ConstraintViolation::getMessage)
+                                      .map(this::extractKeyFromBrackets)
+                                      .collect(Collectors.toList());
+        if (violations.isEmpty()) {
+            return violationKeys;
         }
 
-        return Optional.empty();
+        violationKeys.add(MessageType.REPEAT.getLocalizationKey());
+        return violationKeys;
+
     }
 
     private String extractKeyFromBrackets(String message) {

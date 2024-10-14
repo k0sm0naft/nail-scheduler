@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_USERNAME;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CONFIRM;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.USE_FOR_LOGIN;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
@@ -17,7 +18,6 @@ import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -28,8 +28,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @Component
 @RequiredArgsConstructor
 public class RegistrationUpdateProcessor implements UpdateProcessor {
-    private static final String USE_FOR_LOGIN = "message.use.for.login";
-
     private final UserService userService;
     private final MessageService messageService;
     private final LocalizationService localizationService;
@@ -72,8 +70,8 @@ public class RegistrationUpdateProcessor implements UpdateProcessor {
         Locale locale = user.getLocale();
 
         user.setUsername(username);
-        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
-        if (violations.isPresent()) {
+        List<String> violations = validationUtil.findViolationsOf(user);
+        if (!violations.isEmpty()) {
             changeUsername(update, user);
         } else {
             String text = localizationService.localize(USE_FOR_LOGIN, locale).formatted(username);

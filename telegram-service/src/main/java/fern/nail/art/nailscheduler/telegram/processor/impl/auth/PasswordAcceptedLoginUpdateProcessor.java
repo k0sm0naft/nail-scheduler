@@ -2,6 +2,8 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.LOGIN;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.REGISTRATION;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.REPEAT;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.WRONG_CREDENTIALS;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
@@ -24,9 +26,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @Component
 @RequiredArgsConstructor
 public class PasswordAcceptedLoginUpdateProcessor implements UpdateProcessor {
-    private static final String REPEAT = "message.repeat";
-    private static final String WRONG_CREDENTIALS = "message.wrong.credentials";
-
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final MarkupFactory markupFactory;
@@ -50,9 +49,7 @@ public class PasswordAcceptedLoginUpdateProcessor implements UpdateProcessor {
             messageService.deleteMessage(user, user.getMenuId());
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         } else {
-            //todo make localization service accepting multiple enam messages
-            String text = localizationService.localize(WRONG_CREDENTIALS, locale)
-                    + localizationService.localize(REPEAT, locale);
+            String text = localizationService.localize(List.of(WRONG_CREDENTIALS, REPEAT), locale);
             InlineKeyboardMarkup markup =
                     markupFactory.create(List.of(REGISTRATION, LOGIN), locale);
 

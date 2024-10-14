@@ -1,5 +1,7 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.ENTER_PASSWORD;
+
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
@@ -13,8 +15,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @RequiredArgsConstructor
 public class SendPasswordRequestUpdateProcessor implements UpdateProcessor {
-    private static final String ENTER_PASSWORD = "message.enter.password";
-
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final UserService userService;

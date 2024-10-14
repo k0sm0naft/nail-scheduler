@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.LOGIN;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.REGISTRATION;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.CHOSE_OPTION;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.ButtonType;
@@ -23,9 +24,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @Component
 @RequiredArgsConstructor
 public class AuthenticationUpdateProcessor implements UpdateProcessor {
-    //todo create enum for messages
-    private static final String CHOSE_OPTION = "message.chose.option";
-
     private final UserService userService;
     private final MessageService messageService;
     private final LocalizationService localizationService;
@@ -58,8 +56,7 @@ public class AuthenticationUpdateProcessor implements UpdateProcessor {
     private void sendAuthMenu(User user) {
         Locale locale = user.getLocale();
         String text = localizationService.localize(CHOSE_OPTION, locale);
-        InlineKeyboardMarkup markup =
-                markupFactory.create(List.of(REGISTRATION, LOGIN), locale);
+        InlineKeyboardMarkup markup = markupFactory.create(List.of(REGISTRATION, LOGIN), locale);
 
         Integer menuId = messageService.sendMenuAndGetId(user, text, markup);
         user.setMenuId(menuId);

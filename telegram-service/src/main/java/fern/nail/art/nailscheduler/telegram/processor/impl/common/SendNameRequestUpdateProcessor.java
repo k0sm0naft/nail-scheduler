@@ -3,7 +3,9 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.common;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_FIRST_NAME;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_LAST_NAME;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CONFIRM;
-import static java.lang.System.lineSeparator;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.CHANGE_NAMES;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.ENTER_FIRST_NAME;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.ENTER_LAST_NAME;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.ButtonType;
@@ -17,7 +19,6 @@ import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -28,10 +29,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @RequiredArgsConstructor
 public class SendNameRequestUpdateProcessor implements UpdateProcessor {
     private static final String VALUE_MISSING = "---";
-    private static final String CHANGE_NAMES = "message.change.names";
-    private static final String ENTER_FIRST_NAME = "message.enter.first.name";
-    private static final String ENTER_LAST_NAME = "message.enter.last.name";
-
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final MarkupFactory markupFactory;
@@ -90,7 +87,7 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
 
         String lastName = user.getLastName() == null ? VALUE_MISSING : user.getLastName();
         String text = localizationService.localize(CHANGE_NAMES, locale)
-                                  .formatted(lineSeparator(), user.getFirstName(), lastName);
+                                  .formatted(user.getFirstName(), lastName);
         InlineKeyboardMarkup markup = markupFactory
                 .create(List.of(CHANGE_FIRST_NAME, CHANGE_LAST_NAME, CONFIRM), locale);
 
@@ -98,19 +95,20 @@ public class SendNameRequestUpdateProcessor implements UpdateProcessor {
     }
 
     private boolean hasViolations(User user) {
-        Optional<String> firstNameViolations =
-                validationUtil.findViolationsOf(user, "firstName", user.getLocale());
-        if (firstNameViolations.isPresent()) {
-            handleChangeFirsName(user);
-            return true;
-        }
-
-        Optional<String> lastNameViolations =
-                validationUtil.findViolationsOf(user, "lastName", user.getLocale());
-        if (lastNameViolations.isPresent()) {
+        List<String> lastNameViolations =
+                validationUtil.findViolationsOf(user, "lastName");
+        if (!lastNameViolations.isEmpty()) {
             user.setLastName(null);
             userService.saveUser(user);
         }
-        return false;
+
+        List<String> firstNameViolations =
+                validationUtil.findViolationsOf(user, "firstName");
+        if (firstNameViolations.isEmpty()) {
+            return false;
+        }
+
+        handleChangeFirsName(user);
+        return true;
     }
 }

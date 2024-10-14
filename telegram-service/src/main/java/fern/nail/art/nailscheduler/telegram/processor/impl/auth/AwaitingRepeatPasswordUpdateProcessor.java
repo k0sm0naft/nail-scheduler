@@ -1,6 +1,7 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
-import static java.lang.System.lineSeparator;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.ENTER_PHONE;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.PASSWORD_ACCEPTED;
 
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.GlobalState;
@@ -11,8 +12,8 @@ import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
+import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -20,10 +21,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @RequiredArgsConstructor
 public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
-    private static final String PASSWORD_ACCEPTED = "message.password.accepted";
-    private static final String ENTER_PHONE = "message.enter.phone";
-    private static final String REPEAT = "message.repeat";
-
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final UserService userService;
@@ -44,16 +41,15 @@ public class AwaitingRepeatPasswordUpdateProcessor implements UpdateProcessor {
         Locale locale = user.getLocale();
 
         user.setRepeatPassword(update.getMessage().getText());
-        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
-        if (violations.isPresent()) {
+        List<String> violations = validationUtil.findViolationsOf(user);
+
+        if (violations.isEmpty()) {
+            user.setLocalState(LocalState.AWAITING_PHONE);
+            text = localizationService.localize(List.of(PASSWORD_ACCEPTED, ENTER_PHONE), locale);
+        } else {
             user.setRepeatPassword(null);
             user.setLocalState(LocalState.AWAITING_PASSWORD);
-            text = violations.get() + lineSeparator()
-                    + localizationService.localize(REPEAT, locale);
-        } else {
-            user.setLocalState(LocalState.AWAITING_PHONE);
-            text = localizationService.localize(PASSWORD_ACCEPTED, locale)
-                    + lineSeparator() + localizationService.localize(ENTER_PHONE, locale);
+            text = localizationService.localize(List.copyOf(violations), locale);
         }
 
         userService.saveUser(user);

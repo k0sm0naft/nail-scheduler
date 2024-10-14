@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum ButtonType {
+public enum ButtonType implements Localizable {
     MAIN("button.to.main"),
     LOGIN("button.login"),
     REGISTRATION("button.register"),

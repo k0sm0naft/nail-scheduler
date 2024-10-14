@@ -41,8 +41,7 @@ public class MarkupFactoryImpl implements MarkupFactory {
 
     private InlineKeyboardButton createButton(ButtonType buttonType, Locale locale) {
         return InlineKeyboardButton.builder()
-                                   .text(localizationService.localize(
-                                           buttonType.getLocalizationKey(), locale))
+                                   .text(localizationService.localize(buttonType, locale))
                                    .callbackData(buttonType.name())
                                    .build();
     }

@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum Command {
+    // todo add language support
     START("Get start menu"),
     INFO("About services"),
     BOT_INFO("About bot abilities"),

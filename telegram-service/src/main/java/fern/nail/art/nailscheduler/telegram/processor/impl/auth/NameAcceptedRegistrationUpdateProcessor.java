@@ -2,6 +2,7 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.LOGIN;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.REGISTRATION;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.REPEAT;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
@@ -25,8 +26,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @Component
 @RequiredArgsConstructor
 public class NameAcceptedRegistrationUpdateProcessor implements UpdateProcessor {
-    private static final String REPEAT = "message.repeat";
-
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final MarkupFactory markupFactory;
@@ -52,7 +51,7 @@ public class NameAcceptedRegistrationUpdateProcessor implements UpdateProcessor 
             messageService.deleteMessage(user, user.getMenuId());
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
         } else {
-            String text = registrationResult.errorMessage()
+            String text = registrationResult.errorMessage() + System.lineSeparator()
                     + localizationService.localize(REPEAT, locale);
             InlineKeyboardMarkup markup =
                     markupFactory.create(List.of(REGISTRATION, LOGIN), locale);
