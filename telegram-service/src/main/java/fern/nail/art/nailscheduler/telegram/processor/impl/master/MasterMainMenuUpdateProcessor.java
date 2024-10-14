@@ -4,9 +4,9 @@ import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
+import fern.nail.art.nailscheduler.telegram.service.MarkupFactory;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
-import fern.nail.art.nailscheduler.telegram.utils.menu.AuthorizationMenuUtil;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +19,7 @@ public class MasterMainMenuUpdateProcessor implements UpdateProcessor {
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
-    private final AuthorizationMenuUtil menu;
+    private final MarkupFactory markupFactory;
     private final UserService userService;
 
     @Override

@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
-import static java.lang.System.lineSeparator;
+import static fern.nail.art.nailscheduler.telegram.model.MessageType.ENTER_PASSWORD;
 
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;
@@ -10,8 +10,8 @@ import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.utils.ValidationUtil;
+import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -19,9 +19,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @RequiredArgsConstructor
 public class AwaitingLoginUpdateProcessor implements UpdateProcessor {
-    private static final String ENTER_PASSWORD = "message.enter.password";
-    private static final String REPEAT = "message.repeat";
-
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final UserService userService;
@@ -42,16 +39,16 @@ public class AwaitingLoginUpdateProcessor implements UpdateProcessor {
         Locale locale = user.getLocale();
 
         user.setUsername(update.getMessage().getText());
+        List<String> violations = validationUtil.findViolationsOf(user);
 
-        Optional<String> violations = validationUtil.findViolationsOf(user, locale);
-        if (violations.isPresent()) {
-            text = violations.get() + lineSeparator()
-                    + localizationService.localize(REPEAT, locale);
-        } else {
+        if (violations.isEmpty()) {
             text = localizationService.localize(ENTER_PASSWORD, locale);
             user.setLocalState(LocalState.AWAITING_PASSWORD);
             userService.saveUser(user);
+        } else {
+            text = localizationService.localize(List.copyOf(violations), locale);
         }
+
         messageService.editTextMessage(user, user.getMenuId(), text);
     }
 }

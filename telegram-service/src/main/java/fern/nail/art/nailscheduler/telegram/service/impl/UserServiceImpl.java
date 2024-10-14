@@ -3,6 +3,7 @@ package fern.nail.art.nailscheduler.telegram.service.impl;
 import fern.nail.art.nailscheduler.telegram.client.UserClient;
 import fern.nail.art.nailscheduler.telegram.mapper.UserMapper;
 import fern.nail.art.nailscheduler.telegram.model.AuthUser;
+import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.RegistrationResult;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
@@ -47,10 +48,14 @@ public class UserServiceImpl implements UserService {
     @CacheEvict(value = "telegramUserCache", key = "#user.telegramId")
     public boolean authenticate(AuthUser user) {
         Optional<Long> userId = userClient.findUserId(user);
+        user.setLocalState(null);
         if (userId.isPresent()) {
+            user.setGlobalState(GlobalState.IDLE);
             user.setUserId(userId.get());
             userClient.setTelegramId(user);
             user.setRole(User.Role.CLIENT);
+        } else {
+            user.setGlobalState(GlobalState.AUTHENTICATION);
         }
         return userId.isPresent();
     }
