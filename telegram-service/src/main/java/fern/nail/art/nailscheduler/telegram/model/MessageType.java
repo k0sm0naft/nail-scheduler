@@ -17,13 +17,20 @@ public enum MessageType implements Localizable {
     // COMMON
     HELLO("message.hello"),
     REPEAT("message.repeat"),
+    REPEAT_LATER("message.repeat.later"),
     CHOSE_OPTION("message.chose.option"),
+    MISTAKE_OCCURS("message.mistake.occurs"),
 
-    // SETTINGS,
+    // SETTINGS
     CHANGE_NAMES("message.change.names"),
     ENTER_FIRST_NAME("message.enter.first.name"),
     ENTER_LAST_NAME("message.enter.last.name"),
-    ENTER_PHONE("message.enter.phone");
+    ENTER_PHONE("message.enter.phone"),
+
+    // WORKDAY
+    ENTER_TIME_AND_DAYS("message.enter.time.and.days"),
+    INCORRECT_INPUT("message.incorrect.input"),
+    TEMPLATE_INPUT_FORMAT("message.enter.template.format");
 
     private final String localizationKey;
 }

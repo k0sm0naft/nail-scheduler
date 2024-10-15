@@ -1,12 +1,14 @@
-package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
+package fern.nail.art.nailscheduler.telegram.processor.impl.workday;
 
-import static fern.nail.art.nailscheduler.telegram.model.ButtonType.LOGIN;
-import static fern.nail.art.nailscheduler.telegram.model.ButtonType.REGISTRATION;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.BACK_TO_WORKDAYS;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.SPECIFIC;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.TEMPLATES;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.CHOSE_OPTION;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.ButtonType;
 import fern.nail.art.nailscheduler.telegram.model.GlobalState;
+import fern.nail.art.nailscheduler.telegram.model.LocalState;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.processor.UpdateProcessor;
 import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
@@ -23,17 +25,17 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 
 @Component
 @RequiredArgsConstructor
-public class AuthenticationUpdateProcessor implements UpdateProcessor {
-    private final UserService userService;
+public class SpecificWorkdayUpdateProcessor implements UpdateProcessor {
     private final MessageService messageService;
     private final LocalizationService localizationService;
     private final MarkupFactory markupFactory;
+    private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public boolean canProcess(Update update, User user) {
-        return user.getGlobalState() == GlobalState.AUTHENTICATION
-                && user.getLocalState() == null;
+        return user.getGlobalState() == GlobalState.WORKDAY
+                && user.getLocalState() == LocalState.SPECIFICS;
     }
 
     @Override
@@ -42,21 +44,26 @@ public class AuthenticationUpdateProcessor implements UpdateProcessor {
 
             String data = update.getCallbackQuery().getData();
             switch (ButtonType.valueOf(data)) {
-                case REGISTRATION -> user.setGlobalState(GlobalState.REGISTRATION);
-                case LOGIN -> user.setGlobalState(GlobalState.LOGIN);
+                case SHOW_ALL -> user.setLocalState(LocalState.SHOW_TEMPLATES);
+                case SET -> user.setLocalState(LocalState.SET_DEFAULT);
+                case GET_BY_PERIOD -> user.setLocalState(LocalState.GET_BY_PERIOD);
+                case CHANGE_BY_DATE -> user.setLocalState(LocalState.CHANGE_BY_DATE);
+                case CLEAR_BY_DATE -> user.setLocalState(LocalState.CLEAR_BY_DATE);
+                case BACK_TO_WORKDAYS -> user.setLocalState(null);
                 default -> throw new IllegalArgumentException("Unknown callback data: " + data);
             }
             eventPublisher.publishEvent(new RequestedUpdateRouteEvent(update, user));
 
         } else {
-            sendAuthMenu(user);
+            sendWorkdayMenu(user);
         }
     }
 
-    private void sendAuthMenu(User user) {
+    private void sendWorkdayMenu(User user) {
         Locale locale = user.getLocale();
         String text = localizationService.localize(CHOSE_OPTION, locale);
-        InlineKeyboardMarkup markup = markupFactory.create(List.of(REGISTRATION, LOGIN), locale);
+        List<ButtonType> buttonTypes = List.of(TEMPLATES, SPECIFIC, BACK_TO_WORKDAYS);
+        InlineKeyboardMarkup markup = markupFactory.create(buttonTypes, locale);
 
         Integer menuId = messageService.sendMenuAndGetId(user, text, markup);
         user.setMenuId(menuId);
