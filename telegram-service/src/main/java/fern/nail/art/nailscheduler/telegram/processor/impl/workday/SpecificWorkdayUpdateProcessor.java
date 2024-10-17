@@ -134,7 +134,6 @@ public class SpecificWorkdayUpdateProcessor implements UpdateProcessor {
         markupFactory.addCustomButtons(getButtonName, getButtonCallback, workdays, markup);
     }
 
-
     private List<Workday> getDifferentFromDefaultWorkdays(Set<WorkdayTemplate> templates,
             LocalDate date) {
         Map<DayOfWeek, WorkdayTemplate> mapTemplates =

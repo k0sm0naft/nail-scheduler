@@ -126,7 +126,8 @@
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>true</linkXRef>
-                    <sourceDirectories>./src/main</sourceDirectories>
+                    <sourceDirectories>${project.build.sourceDirectory}</sourceDirectories>
+                    <includeResources>false</includeResources>
                 </configuration>
             </plugin>
         </plugins>

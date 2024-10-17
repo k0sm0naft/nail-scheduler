@@ -95,7 +95,8 @@ public class WorkdayClient {
         return Boolean.TRUE.equals(result);
     }
 
-    public boolean setWorkday(WorkdayDto dto) {String token = jwtUtil.getToken();
+    public boolean setWorkday(WorkdayDto dto) {
+        String token = jwtUtil.getToken();
 
         Boolean result = webClient.post()
                                   .uri("/workdays")

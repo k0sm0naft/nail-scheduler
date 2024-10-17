@@ -15,6 +15,7 @@ public class WorkdayMapper {
                 templateDto.endTime()
         );
     }
+
     public Workday toWorkday(WorkdayDto dto) {
         return new Workday(
                 dto.date(),
