@@ -14,7 +14,6 @@ import fern.nail.art.nailscheduler.telegram.service.LocalizationService;
 import fern.nail.art.nailscheduler.telegram.service.MarkupFactory;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
-import fern.nail.art.nailscheduler.telegram.service.WorkdayService;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,6 @@ public class SetTemplateWorkdayUpdateProcessor implements UpdateProcessor {
     private final MarkupFactory markupFactory;
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
-    private final WorkdayService workdayService;
 
     @Override
     public boolean canProcess(Update update, User user) {
@@ -60,7 +58,6 @@ public class SetTemplateWorkdayUpdateProcessor implements UpdateProcessor {
         messageService.editMenu(user, user.getMenuId(), text, markup);
         userService.saveUser(user);
     }
-
 
     private void switchProcessorToTemplates(Update update, User user) {
         user.setLocalState(LocalState.TEMPLATES);

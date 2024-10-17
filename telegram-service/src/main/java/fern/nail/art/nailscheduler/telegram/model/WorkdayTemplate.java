@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class WorkdayTemplate implements Comparable<WorkdayTemplate> {
+public class WorkdayTemplate {
     private DayOfWeek dayOfWeek;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -20,10 +20,5 @@ public class WorkdayTemplate implements Comparable<WorkdayTemplate> {
                 dayOfWeek.getDisplayName(TextStyle.SHORT, locale).toUpperCase(),
                 startTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                 endTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-    }
-
-    @Override
-    public int compareTo(WorkdayTemplate o) {
-        return dayOfWeek.compareTo(o.dayOfWeek);
     }
 }

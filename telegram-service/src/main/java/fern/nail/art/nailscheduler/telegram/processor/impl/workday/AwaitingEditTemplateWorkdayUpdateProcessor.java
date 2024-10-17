@@ -3,12 +3,15 @@ package fern.nail.art.nailscheduler.telegram.processor.impl.workday;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.BACK_TO_TEMPLATES;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.BACK_TO_WORKDAYS;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.SET;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.TEMPLATES;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.CHOSE_OPTION;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.INCORRECT_INPUT;
-import static fern.nail.art.nailscheduler.telegram.model.MessageType.MISTAKE_OCCURS;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.REPEAT;
-import static fern.nail.art.nailscheduler.telegram.model.MessageType.REPEAT_LATER;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.TEMPLATE_INPUT_FORMAT;
+import static fern.nail.art.nailscheduler.telegram.model.PatternAndRegex.DAYS_OF_WEEK;
+import static fern.nail.art.nailscheduler.telegram.model.PatternAndRegex.SPACE;
+import static fern.nail.art.nailscheduler.telegram.model.PatternAndRegex.TIME;
+import static fern.nail.art.nailscheduler.telegram.model.PatternAndRegex.getPatternOf;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.ButtonType;
@@ -25,6 +28,7 @@ import fern.nail.art.nailscheduler.telegram.service.WorkdayService;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -40,14 +44,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 @RequiredArgsConstructor
 public class AwaitingEditTemplateWorkdayUpdateProcessor implements UpdateProcessor {
     private static final int FIRST_DAY_INDEX = 2;
-    private static final String HOURS_REGEX = "([01]\\d|2[0-3])";
-    private static final String MINUTES_REGEX = "([0-5]\\d)";
-    private static final String TIME_REGEX = HOURS_REGEX + ':' + MINUTES_REGEX;
-    private static final String SPACE_REGEX = "\\s";
-    private static final String DAYS_OF_WEEK_REGEX = "([1-7](\\s[1-7])*)";
-    private static final String TEMPLATE_INPUT_REGEX =
-            '^' + TIME_REGEX + SPACE_REGEX + TIME_REGEX + SPACE_REGEX + DAYS_OF_WEEK_REGEX + '$';
-    private static final String SPACE = " ";
 
     private final MessageService messageService;
     private final LocalizationService localizationService;
@@ -83,20 +79,16 @@ public class AwaitingEditTemplateWorkdayUpdateProcessor implements UpdateProcess
 
     private void handleMessage(Update update, User user) {
         String input = update.getMessage().getText().strip();
-        if (Pattern.matches(TEMPLATE_INPUT_REGEX, input)) {
-            Set<WorkdayTemplate> templates = setTemplates(input);
-            if (templates.isEmpty()) {
-                handleIncorrectInput(List.of(MISTAKE_OCCURS, REPEAT_LATER), user);
-            } else {
-                handleSuccessUpdate(user, templates);
-            }
+        if (Pattern.matches(getPatternOf(List.of(TIME, SPACE, TIME, SPACE, DAYS_OF_WEEK)), input)) {
+            Set<WorkdayTemplate> templates = parseAndSetTemplates(input);
+            handleSuccessUpdate(user, templates);
         } else {
             handleIncorrectInput(List.of(INCORRECT_INPUT, TEMPLATE_INPUT_FORMAT, REPEAT), user);
         }
     }
 
-    private Set<WorkdayTemplate> setTemplates(String input) {
-        String[] elements = input.split(SPACE);
+    private Set<WorkdayTemplate> parseAndSetTemplates(String input) {
+        String[] elements = input.split(SPACE.getRegex());
         LocalTime startTime = LocalTime.parse(elements[0]);
         LocalTime endTime = LocalTime.parse(elements[1]);
         String[] days = Arrays.copyOfRange(elements, FIRST_DAY_INDEX, elements.length);
@@ -110,11 +102,13 @@ public class AwaitingEditTemplateWorkdayUpdateProcessor implements UpdateProcess
     private void handleSuccessUpdate(User user, Set<WorkdayTemplate> templates) {
         Locale locale = user.getLocale();
         String templatesTable = templates.stream()
-                                         .sorted()
+                                         .sorted(Comparator
+                                                 .comparing(WorkdayTemplate::getStartTime))
                                          .map(template -> template.getFormated(locale))
                                          .collect(Collectors.joining(System.lineSeparator()));
 
-        String text = localizationService.localize(List.of(templatesTable, CHOSE_OPTION), locale);
+        String text = localizationService
+                .localize(List.of(TEMPLATES, templatesTable, CHOSE_OPTION), locale);
         List<ButtonType> buttonTypes = List.of(SET, BACK_TO_WORKDAYS);
         InlineKeyboardMarkup markup = markupFactory.create(buttonTypes, locale);
 

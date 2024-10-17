@@ -4,7 +4,6 @@ import static fern.nail.art.nailscheduler.telegram.model.ButtonType.BACK_TO_WORK
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.SET;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.TEMPLATES;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.CHOSE_OPTION;
-import static fern.nail.art.nailscheduler.telegram.model.MessageType.MISTAKE_OCCURS;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.ButtonType;
@@ -18,6 +17,7 @@ import fern.nail.art.nailscheduler.telegram.service.MarkupFactory;
 import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
 import fern.nail.art.nailscheduler.telegram.service.WorkdayService;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -71,15 +71,10 @@ public class TemplateWorkdayUpdateProcessor implements UpdateProcessor {
     private String getTemplatesTable(Locale locale) {
         Set<WorkdayTemplate> templates = workdayService.getTemplates();
 
-        if (templates.isEmpty()) {
-            return MISTAKE_OCCURS.getLocalizationKey();
-        }
-
         return templates.stream()
-                        .sorted()
+                        .sorted(Comparator.comparing(WorkdayTemplate::getDayOfWeek))
                         .map(template -> template.getFormated(locale))
                         .collect(Collectors.joining(System.lineSeparator()));
-
     }
 
     private void switchProcessor(Update update, User user, LocalState localState) {

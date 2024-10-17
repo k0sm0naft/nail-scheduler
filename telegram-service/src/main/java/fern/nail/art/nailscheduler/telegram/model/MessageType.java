@@ -17,9 +17,8 @@ public enum MessageType implements Localizable {
     // COMMON
     HELLO("message.hello"),
     REPEAT("message.repeat"),
-    REPEAT_LATER("message.repeat.later"),
     CHOSE_OPTION("message.chose.option"),
-    MISTAKE_OCCURS("message.mistake.occurs"),
+    UPDATED("message.updated"),
 
     // SETTINGS
     CHANGE_NAMES("message.change.names"),
@@ -28,9 +27,15 @@ public enum MessageType implements Localizable {
     ENTER_PHONE("message.enter.phone"),
 
     // WORKDAY
+    CURRENT("message.current"),
+    DEFAULT("message.date"),
+    DATE("message.date"),
     ENTER_TIME_AND_DAYS("message.enter.time.and.days"),
     INCORRECT_INPUT("message.incorrect.input"),
-    TEMPLATE_INPUT_FORMAT("message.enter.template.format");
+    TEMPLATE_INPUT_FORMAT("message.enter.template.format"),
+    ALL_MATCHING_DEFAULTS("message.all.matching.defaults"),
+    ENTER_WORKDAY("message.enter.workday"),
+    WORKDAY_INPUT_FORMAT("message.enter.workday.format");
 
     private final String localizationKey;
 }

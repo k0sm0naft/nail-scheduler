@@ -1,6 +1,6 @@
 package fern.nail.art.nailscheduler.telegram.processor.impl.auth;
 
-import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_USERNAME;
+import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CONFIRM;
 import static fern.nail.art.nailscheduler.telegram.model.MessageType.USE_FOR_LOGIN;
 
@@ -51,7 +51,7 @@ public class RegistrationUpdateProcessor implements UpdateProcessor {
                     startRegistration(update, (AuthUser) user);
                 }
                 case CONFIRM -> saveUsername(update, (AuthUser) user);
-                case CHANGE_USERNAME -> changeUsername(update, user);
+                case CHANGE -> changeUsername(update, user);
                 default -> throw new IllegalStateException("Unexpected callback: " + data);
             }
         }
@@ -76,7 +76,7 @@ public class RegistrationUpdateProcessor implements UpdateProcessor {
         } else {
             String text = localizationService.localize(USE_FOR_LOGIN, locale).formatted(username);
             InlineKeyboardMarkup markup =
-                    markupFactory.create(List.of(CONFIRM, CHANGE_USERNAME), locale);
+                    markupFactory.create(List.of(CONFIRM, CHANGE), locale);
 
             messageService.editMenu(user, user.getMenuId(), text, markup);
         }

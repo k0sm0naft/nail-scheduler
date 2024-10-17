@@ -43,10 +43,10 @@ public class WorkdayMenuUpdateProcessor implements UpdateProcessor {
     public void process(Update update, User user) {
         String data = update.getCallbackQuery().getData();
         switch (ButtonType.valueOf(data)) {
-            case BACK_TO_MAIN -> switchProcessorToIdle(update, user);
             case WORKDAYS, BACK_TO_WORKDAYS -> sendWorkdayMenu(user);
             case TEMPLATES -> switchProcessor(update, user, LocalState.TEMPLATES);
             case SPECIFIC -> switchProcessor(update, user, LocalState.SPECIFICS);
+            case BACK_TO_MAIN -> switchProcessorToIdle(update, user);
             default -> throw new IllegalArgumentException("Unknown callback data: " + data);
         }
     }

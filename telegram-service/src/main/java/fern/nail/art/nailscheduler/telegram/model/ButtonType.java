@@ -14,10 +14,17 @@ public enum ButtonType implements Localizable {
     MAIN("button.to.main"),
     CONFIRM("button.confirm"),
     BACK_TO_MAIN("button.go.back"),
+    SHOW("button.show"),
+    MONTH("button.month"),
+    WEEK("button.week"),
+    DAY("button.day"),
+    NEXT("button.next"),
+    PREVIOUS("button.previous"),
+    ADD("button.add"),
+    CHANGE("button.change"),
 
     // SETTINGS
     SETTINGS("button.settings"),
-    CHANGE_USERNAME("button.change"),
     CHANGE_FIRST_NAME("button.change.first.name"),
     CHANGE_LAST_NAME("button.change.last.name"),
 
@@ -29,14 +36,15 @@ public enum ButtonType implements Localizable {
 
     // WORKDAY
     TEMPLATES("button.templates"),
-    SHOW_ALL("button.show.all"),
     SET("button.set"),
     GET_BY_PERIOD("button.get.by.period"),
-    CHANGE_BY_DATE("button.change.by.date"),
-    CLEAR_BY_DATE("button.clear.by.date"),
+    SET_DEFAULT("button.set.default"),
     SPECIFIC("button.specific"),
     BACK_TO_WORKDAYS("button.go.back"),
-    BACK_TO_TEMPLATES("button.go.back");
+    BACK_TO_TEMPLATES("button.go.back"),
+    BACK_TO_SPECIFIC("button.go.back"),
+    BACK_TO_SHOW("button.go.back"),
+    BACK_TO_MONTH("button.go.back");
 
     private final String localizationKey;
 }
