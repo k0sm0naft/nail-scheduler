@@ -9,5 +9,6 @@ public interface LocalizationService {
 
     String localize(Localizable localizable, Locale locale);
 
+    //todo change to Collection<Localizable> and create model for localizable strings
     String localize(Collection<Object> localizableElements, Locale locale);
 }

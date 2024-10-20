@@ -1,4 +1,4 @@
-package fern.nail.art.nailscheduler.telegram.processor.impl.common;
+package fern.nail.art.nailscheduler.telegram.processor.impl.setting;
 
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_FIRST_NAME;
 import static fern.nail.art.nailscheduler.telegram.model.ButtonType.CHANGE_LAST_NAME;

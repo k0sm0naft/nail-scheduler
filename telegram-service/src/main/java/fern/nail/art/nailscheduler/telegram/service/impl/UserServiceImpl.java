@@ -7,6 +7,7 @@ import fern.nail.art.nailscheduler.telegram.model.GlobalState;
 import fern.nail.art.nailscheduler.telegram.model.RegistrationResult;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.service.UserService;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -29,8 +30,10 @@ public class UserServiceImpl implements UserService {
     public User getUser(Update update) {
         //todo add real db for telegramUsers
         //todo try get user from db, next try get from api, next create tempUser for reg-on or login
-        return userClient.findUserByTelegramId(AbilityUtils.getChatId(update))
-                         .orElse(userMapper.userFromUpdate(update));
+        User user = userClient.findUserByTelegramId(AbilityUtils.getChatId(update))
+                              .orElse(userMapper.userFromUpdate(update));
+        user.setLocale(Locale.forLanguageTag(AbilityUtils.getUser(update).getLanguageCode()));
+        return user;
     }
 
     @Override

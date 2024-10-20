@@ -1,4 +1,4 @@
-package fern.nail.art.nailscheduler.telegram.processor.impl.common;
+package fern.nail.art.nailscheduler.telegram.processor.impl.setting;
 
 import fern.nail.art.nailscheduler.telegram.event.RequestedUpdateRouteEvent;
 import fern.nail.art.nailscheduler.telegram.model.LocalState;

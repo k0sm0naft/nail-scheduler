@@ -18,12 +18,24 @@ public enum MessageType implements Localizable {
     HELLO("message.hello"),
     REPEAT("message.repeat"),
     CHOSE_OPTION("message.chose.option"),
+    UPDATED("message.updated"),
 
-    // SETTINGS,
+    // SETTINGS
     CHANGE_NAMES("message.change.names"),
     ENTER_FIRST_NAME("message.enter.first.name"),
     ENTER_LAST_NAME("message.enter.last.name"),
-    ENTER_PHONE("message.enter.phone");
+    ENTER_PHONE("message.enter.phone"),
+
+    // WORKDAY
+    CURRENT("message.current"),
+    DEFAULT("message.date"),
+    DATE("message.date"),
+    ENTER_TIME_AND_DAYS("message.enter.time.and.days"),
+    INCORRECT_INPUT("message.incorrect.input"),
+    TEMPLATE_INPUT_FORMAT("message.enter.template.format"),
+    ALL_MATCHING_DEFAULTS("message.all.matching.defaults"),
+    ENTER_WORKDAY("message.enter.workday"),
+    WORKDAY_INPUT_FORMAT("message.enter.workday.format");
 
     private final String localizationKey;
 }

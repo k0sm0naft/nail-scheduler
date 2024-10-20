@@ -8,7 +8,6 @@ import fern.nail.art.nailscheduler.telegram.model.AuthUser;
 import fern.nail.art.nailscheduler.telegram.model.RegistrationResult;
 import fern.nail.art.nailscheduler.telegram.model.User;
 import fern.nail.art.nailscheduler.telegram.sequrity.JwtUtil;
-import fern.nail.art.nailscheduler.telegram.service.MessageService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,7 +23,6 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class UserClient {
-    private final MessageService messageService;
     private final WebClient webClient;
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
